@@ -252,6 +252,8 @@ class nt_TMVA_Cuts {
 		float con_dca_daughters;
 		float con_dV0Max;
 
+    int ReadMode; //ReadMode: 0 - pre-cuts, 1 - analysis cust
+
 
 		nt_TMVA_Cuts(TTree *tree=0);
 		virtual ~nt_TMVA_Cuts();
@@ -280,6 +282,9 @@ class nt_TMVA_Cuts {
 		virtual void Set_con_pRPt(float c) {con_pRPt = c;};
 		virtual void Set_con_dV0Max(float c) {con_dV0Max = c;};
 		//virtual void Set_con_();
+    
+    //set ReadMode
+    virtual void Set_ReadMode(int Mode) {ReadMode = Mode;};
 };
 
 #endif

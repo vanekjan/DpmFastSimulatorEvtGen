@@ -1,15 +1,19 @@
 #define nt_TMVA_Cuts_cxx
 #include "nt_TMVA_Cuts.h"
+#include<iostream>
+#include<fstream>
+#include<sstream>
+#include<string>
 #include <TH2.h>
 #include <TStyle.h>
 #include <TCanvas.h>
 #include <TH1F.h>
 #include <TH2F.h>
 
-//#include "./TMVA_cuts/analysis/tmvaCuts.h"
-#include "./TMVA_cuts/_iteration_2/tmvaCuts.h"
+#include "./TMVA_cuts/tmvaCuts.h" //contains analysis pre-cuts, set ReadMode = 1 to overwrite them with TMVA cuts
 
 using namespace tmvaCuts;
+using namespace std;
 
 void nt_TMVA_Cuts::Loop()
 {
@@ -38,13 +42,11 @@ void nt_TMVA_Cuts::Loop()
 	//by  b_branchname->GetEntry(ientry); //read only this branch
 	if (fChain == 0) return;
 
-  //double pT_bins[13] = { 1., 2., 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 7., 8., 10. }; //defined in tmvaCuts.h
-
 	// generated Dpm histograms
   TH1F *h_dpm_pt[9];
   for(unsigned int i = 0; i<9; i++)
   {
-    h_dpm_pt[i] = new TH1F(Form("h_dpm_pt%i", i),Form("Generated_Dpm_cent_%i", i),nPtBins_TMVA, pT_bins_TMVA);
+    h_dpm_pt[i] = new TH1F(Form("h_dpm_pt%i", i),Form("Generated_Dpm_cent_%i", i),nPtBins, pT_bins);
     h_dpm_pt[i]->Sumw2();
 
   }
@@ -58,17 +60,131 @@ void nt_TMVA_Cuts::Loop()
   TH1F *h_r_dpm_pt[9];
   for(unsigned int i = 0; i<9; i++)
   {
-    h_r_dpm_pt[i] = new TH1F(Form("h_r_dpm_pt%i", i),Form("Reconstructed_Dpm_no_TOF_cent_%i", i),nPtBins_TMVA, pT_bins_TMVA);
+    h_r_dpm_pt[i] = new TH1F(Form("h_r_dpm_pt%i", i),Form("Reconstructed_Dpm_no_TOF_cent_%i", i),nPtBins, pT_bins);
     h_r_dpm_pt[i]->Sumw2();
 
   }
-	TH1F *h_r_dpm_phi = new TH1F("h_r_dpm_phi","Reconstructed_Dpm_no_TOF_phi",64, -3.2, 3.2);
+  TH1F *h_r_dpm_phi = new TH1F("h_r_dpm_phi","Reconstructed_Dpm_no_TOF_phi",64, -3.2, 3.2);
 	TH2F *h_r_dpm_eta_phi = new TH2F("h_r_dpm_eta_phi","Reconstructed_Dpm_no_TOF_eta_phi", 140, -1.2, 1.2, 64, -3.2, 3.2);
-
+	
 	h_r_dpm_phi->Sumw2();
 	h_r_dpm_eta_phi->Sumw2();
   //----------------------------------------------------------------------------------------------------
+  // reconstructed Dpm histograms without TOF matching - for MB (cebtraity 0-80%)
+  TH1F *h_r_dpm_pt_MB[9];
+  for(unsigned int i = 0; i<9; i++)
+  {
+    h_r_dpm_pt_MB[i] = new TH1F(Form("h_r_dpm_pt_MB_%i", i),Form("Reconstructed_Dpm_no_TOF_cent_MB_%i", i),nPtBins, pT_bins);
+    h_r_dpm_pt_MB[i]->Sumw2();
+
+  }
+  TH1F *h_r_dpm_phi_MB = new TH1F("h_r_dpm_phi_MB","Reconstructed_Dpm_no_TOF_phi_MB",64, -3.2, 3.2);
+	TH2F *h_r_dpm_eta_phi_MB = new TH2F("h_r_dpm_eta_phi_MB","Reconstructed_Dpm_no_TOF_eta_phi_MB", 140, -1.2, 1.2, 64, -3.2, 3.2);
+	
+	h_r_dpm_phi_MB->Sumw2();
+	h_r_dpm_eta_phi_MB->Sumw2();
+  //---------------------------------------------------------------------------------------------------
+
+  //invariant mass hitograms
   
+
+  TH1F *h_D_inv_mass_base = new TH1F("D_inv_mass", "D_inv_mass", 40, 1.7, 2.1); //base histogram for D+- inv. mass
+
+  TH1F *h_D_inv_mass_array[nPtBins][nCentBins]; //inv. mass histograms - same as in analysis
+
+  for(unsigned int i = 0; i < nCentBins; i++)
+  {
+    for(unsigned int j = 0; j < nPtBins; j++)
+    {
+      //cout<<i<<" "<<j<<endl;
+      h_D_inv_mass_array[j][i] = (TH1F*)h_D_inv_mass_base->Clone();
+      h_D_inv_mass_array[j][i]->SetNameTitle(Form("D_inv_mass_cent_%i_pT_%i", i, j), Form("D_inv_mass_cent_%i_pT_%i", i, j));
+    }
+  }  
+  //-------------------------------------------------------------------------------------------------------
+  //load input files with cuts-----------------------------------------------------------------------------
+    if(ReadMode != 0)
+    {
+      ifstream CutsFile[nCentBins];
+
+      for(unsigned int j = 0; j < nCentBins; j++)
+      {
+        ostringstream filename;
+        //add setter as an argument of Loop to set cuts (ana, loose, tight, pre-cuts)
+        if(ReadMode == 1)
+        {
+          filename << "./TMVA_cuts/002_new_11pT_bins_2_pT_regions/analysis/cuts_cent_" << j << ".txt";
+          //filename << "./TMVA_cuts/004_recrtangular_cuts_test/analysis/cuts_cent_" << j << ".txt";
+          
+        }
+        if(ReadMode == 2)
+        {
+          filename << "./TMVA_cuts/002_new_11pT_bins_2_pT_regions/loose/30_percent/cuts_loose_cent_" << j << ".txt";
+          
+        }
+        if(ReadMode == 3)
+        {
+          filename << "./TMVA_cuts/002_new_11pT_bins_2_pT_regions/tight/30_percent/cuts_tight_cent_" << j << ".txt";
+          
+        }
+        
+        
+        CutsFile[j].open(filename.str().c_str());
+        if(!CutsFile[j].is_open())
+        {
+          cout<<"Failed to open file with cuts for centrality "<<j<<"!"<<endl;
+          return;
+        }
+      }
+
+      string CutsLine;
+
+      for(unsigned int cent = 0; cent < nCentBins; cent++)
+      {
+        int lineNo = 1;
+  
+        while(getline(CutsFile[cent], CutsLine))
+        {
+  
+          stringstream CutsLineStream(CutsLine);
+          for(unsigned int pTbin = 0; pTbin < nPtBins; pTbin++)
+          {
+            if(lineNo==1)
+            {
+              CutsLineStream>>k_dca_cut[cent][pTbin];
+            }
+            if(lineNo==2)
+            {
+              CutsLineStream>>pi1_dca_cut[cent][pTbin];
+              pi2_dca_cut[cent][pTbin] = pi1_dca_cut[cent][pTbin];
+            }
+            if(lineNo==3)
+            {
+              CutsLineStream>>mdcaMax_cut[cent][pTbin];
+            }
+            if(lineNo==4)
+            {
+              CutsLineStream>>D_decayL_min_cut[cent][pTbin];
+            }
+            if(lineNo==5)
+            {
+              CutsLineStream>>D_cos_theta_cut[cent][pTbin];
+            }
+            if(lineNo==6)
+            {
+              CutsLineStream>>D_dV0Max_cut[cent][pTbin];
+            }
+  
+          }//end for (pT)
+  
+          lineNo++;
+  
+        }//end while
+      }//end for (centrality)
+     }//end if for ReadMode
+ //----------------------------------------------------------------------------------------
+
+
 
 	// now cuts
 	TH1D *n_cuts = new TH1D("n_cuts","n_cuts",100,0,100);
@@ -144,14 +260,52 @@ void nt_TMVA_Cuts::Loop()
 
     int centBin = -1;
 
-    if( cent == 7 || cent == 8 ) centBin = 0; //0-10%
-    if( cent == 4 || cent == 5 || cent == 6  ) centBin = 1; //10-40%
-    if( cent == 0 || cent == 1 || cent ==  2 || cent ==  3 ) centBin = 2; //40-80%
-    if( cent != -1 ) centBin = 3; //0-80%
+    if( centBin_9 == 7 || centBin_9 == 8 ) centBin = 0; //0-10%
+    if( centBin_9 == 4 || centBin_9 == 5 || centBin_9 == 6  ) centBin = 1; //10-40%
+    if( centBin_9 == 0 || centBin_9 == 1 || centBin_9 ==  2 || centBin_9 ==  3 ) centBin = 2; //40-80%
+    //if( cent != -1 ) centBin = 3; //0-80%
 
 
     if(ptBin < 0 ) continue; //reject Dpm with pT out of range
 
+    if( (dcaDaughters < mdcaMax_cut[centBin][ptBin]*10000) &&
+    (decayLength > D_decayL_min_cut[centBin][ptBin]*10000 && decayLength < 20000. ) &&
+    (cosTheta > D_cos_theta_cut[centBin][ptBin] ) &&
+    (mdV0Max <  D_dV0Max_cut[centBin][ptBin]*10000) &&
+    ( p1RDca > pi1_dca_cut[centBin][ptBin]*10000 && p2RDca > pi2_dca_cut[centBin][ptBin]*10000 && kRDca > k_dca_cut[centBin][ptBin]*10000 ) )
+    {
+      // reconstructed Dpm without TOF matching
+    	h_r_dpm_pt[centBin_9]->Fill(pt); //added weigh
+
+     	h_r_dpm_phi->Fill(phi);
+   		h_r_dpm_eta_phi->Fill(eta, phi);
+
+      h_D_inv_mass_array[ptBin][centBin]->Fill(rM);
+
+
+    }
+
+
+
+    if( (dcaDaughters < mdcaMax_cut[3][ptBin]*10000) &&
+    (decayLength > D_decayL_min_cut[3][ptBin]*10000 && decayLength < 20000. ) &&
+    (cosTheta > D_cos_theta_cut[3][ptBin] ) &&
+    (mdV0Max <  D_dV0Max_cut[3][ptBin]*10000) &&
+    ( p1RDca > pi1_dca_cut[3][ptBin]*10000 && p2RDca > pi2_dca_cut[3][ptBin]*10000 && kRDca > k_dca_cut[3][ptBin]*10000 ) )
+    {
+      // reconstructed Dpm without TOF matching
+    	h_r_dpm_pt_MB[centBin_9]->Fill(pt);
+
+	    h_r_dpm_phi_MB->Fill(phi);
+  		h_r_dpm_eta_phi_MB->Fill(eta, phi);
+
+       h_D_inv_mass_array[ptBin][3]->Fill(rM); //centrality 0-80
+
+    }
+
+
+    
+/*
     //centra and pT dependent topological cuts from TMVA		
     if (mdV0Max > D_dV0Max_cut[centBin][ptBin]*10000) continue; //simulation is in mum, data in cm - has to convert units to use the same file for cuts
 		n_cuts->Fill(14);
@@ -173,14 +327,8 @@ void nt_TMVA_Cuts::Loop()
 		// p2Dca
 		if (p2RDca < pi2_dca_cut[centBin][ptBin]*10000) continue; //orig. pi2Dca
 		n_cuts->Fill(10);
+*/		
 		
-		
-    // reconstructed Dpm without TOF matching
-  	h_r_dpm_pt[centBin_9]->Fill(pt);		
-
-		h_r_dpm_phi->Fill(phi);
-		h_r_dpm_eta_phi->Fill(eta, phi);
-
    
 		
 	} //end entries loop
@@ -204,6 +352,22 @@ void nt_TMVA_Cuts::Loop()
   }
 	h_r_dpm_phi->Write();
 	h_r_dpm_eta_phi->Write();
+
+   //reconstructed Dpm, no TOF matching
+  for(unsigned int j = 0; j<9; j++ )
+  {
+    h_r_dpm_pt_MB[j]->Write();
+  }
+	h_r_dpm_phi_MB->Write();
+	h_r_dpm_eta_phi_MB->Write();
+
+  for(unsigned int j = 0; j < nCentBins; j++)
+  {
+    for(unsigned int k = 0; k < nPtBins; k++)
+    {
+      h_D_inv_mass_array[k][j]->Write();
+    }
+  }
 
 
   n_cuts->Write();

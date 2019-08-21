@@ -1,4 +1,4 @@
-void run_evtGent_toyMc(int nEvents = 1e2)
+void run_evtGent_toyMc(int nEvents = 1e3)
 {
 
   gROOT->ProcessLine(".L bfc.C");
@@ -31,5 +31,7 @@ void run_evtGent_toyMc(int nEvents = 1e2)
   gInterpreter->AddIncludePath("$STAR/StRoot/StarGenerator/HepMC2_06_09");
   //gInterpreter->AddIncludePath("/common/star/star64/packages/SL16k/StRoot/StarGenerator/HepMC2_06_09"); //probably just for PDSF
 
-  gROOT->ProcessLine(Form(".x evtGen_toyMc.C++(%i)",nEvents));
+  //cout<<"Processing evtGen_toyMc with..."<<endl;
+
+  gROOT->ProcessLine(Form(".x evtGen_toyMc.C+(%i)",nEvents));
 }

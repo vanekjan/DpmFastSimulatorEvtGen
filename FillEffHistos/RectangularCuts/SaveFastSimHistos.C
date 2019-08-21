@@ -1,3 +1,7 @@
+/*
+  Macro for saving distributions form FastSim with EvtGen. For comparison with FastSim with PYTHIA.
+*/
+
 #include <iostream>
 #include <fstream>
 
@@ -13,7 +17,7 @@ using namespace std;
 
 void SaveFastSimHistos()
 {
-  TFile *inFile = new TFile("/star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/2018-07-31_13-54/merge/output.root", "read");    
+  TFile *inFile = new TFile("/star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/2019-02-20_06-17/merge/output.root", "read");    
 
     TTree          *fChain = (TTree*)inFile->Get("nt");   //!pointer to the analyzed TTree or TChain
 		
@@ -43,6 +47,7 @@ void SaveFastSimHistos()
 		Float_t         rV0z;
 		Float_t         dcaDaughters;
 		Float_t         decayLength;
+    Float_t         MCdecayLength;
 		Float_t         dcaDpmToPv;
 		Float_t         cosTheta;
 		Float_t         angle12;
@@ -148,6 +153,7 @@ void SaveFastSimHistos()
 	fChain->SetBranchAddress("rV0z", &rV0z);
 	fChain->SetBranchAddress("dcaDaughters", &dcaDaughters);
 	fChain->SetBranchAddress("decayLength", &decayLength);
+  fChain->SetBranchAddress("MCdecayLength", &MCdecayLength);
 	fChain->SetBranchAddress("dcaDpmToPv", &dcaDpmToPv);
 	fChain->SetBranchAddress("cosTheta", &cosTheta);
 	fChain->SetBranchAddress("angle12", &angle12);
@@ -234,7 +240,7 @@ void SaveFastSimHistos()
   const int nPtBins = 12;  
   double pT_bins[nPtBins+1] = { 1., 2., 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 7., 8., 10. }; //pT binning - for analysis
 
-  TFile *outFile = new TFile("InputHistosEvtGen_new_02.root", "recreate");
+  TFile *outFile = new TFile("InputHistosEvtGen_new_pT_resolution.root", "recreate");
 
   //const int nPtBins = 6;
   //float const pT_bins[nPtBins+1] = {0., 1., 2., 3., 5., 7., 10.}; //my TMVA pT bins, for D0 nSignal estimation
@@ -257,6 +263,10 @@ void SaveFastSimHistos()
   TH1F *h_pi2_rDCA = new TH1F("h_pi2_rDCA", "h_pi2_rDCA", 100, 0, 2000);
 
   TH1F *h_DecayLength = new TH1F("h_DecayLength", "h_DecayLength", 100, 0, 2000);
+  TH1F *h_DecayLengthMC = new TH1F("h_DecayLengthMC", "h_DecayLengthMC", 100, 0, 2000);
+
+  TH2F *h2_DecayLenght_RvsMC = new TH2F("h2_DecayLenght_RvsMC", "h2_DecayLenght_RvsMC", 100, 0, 2000, 100, 0, 2000 );
+  TH2F *h2_DecayLenght_RvsMC_cut = new TH2F("h2_DecayLenght_RvsMC_cut", "h2_DecayLenght_RvsMC_cut", 100, 0, 2000, 100, 0, 2000 );
 
   TH1F *h_PairDCAmax = new TH1F("h_PairDCAmax", "h_PairDCAmax", 200, 0, 200);
 
@@ -350,6 +360,11 @@ void SaveFastSimHistos()
 		h_PairDCAmax->Fill(dcaDaughters);
 		
 		h_DecayLength->Fill(decayLength);
+    h_DecayLengthMC->Fill(MCdecayLength);
+
+    h2_DecayLenght_RvsMC->Fill(decayLength, MCdecayLength);
+    h2_DecayLenght_RvsMC->GetXaxis()->SetTitle("decayLength");
+    h2_DecayLenght_RvsMC->GetYaxis()->SetTitle("MCdecayLength");
 		
 		h_k_DCA->Fill(kDca);
     h_pi1_DCA->Fill(p1Dca);
@@ -359,9 +374,64 @@ void SaveFastSimHistos()
     h_pi1_rDCA->Fill(p1RDca);
     h_pi2_rDCA->Fill(p2RDca);
 		
-
-		
 		h_dV0Max->Fill(mdV0Max);
+
+
+    //fill histograms after pre-production cuts
+    if (TMath::Abs(v0z) > 6000) continue;
+		
+		// |TPC Vz - VPD Vz| missing
+		//
+		// cent
+		//if (cent != con_cent) continue;
+		//if (cent > con_cent_up) continue;
+		//if (cent < con_cent_down) continue;
+		
+		if (fabs(kREta) > 1 || fabs(p1REta) > 1 || fabs(p2REta) > 1) continue;
+		// HFT
+		if (kHft != 1 || p1Hft != 1 || p2Hft != 1) continue;
+		
+		// TPC
+		if (kTpc != 1 || p1Tpc != 1 || p2Tpc != 1) continue;
+		//if (kTof != 1 || p1Tof != 1 || p2Tof != 1) continue;
+		
+		// cosTheta
+		if (cosTheta < 0.995) continue;
+		
+		// dcaDaughters
+		if (dcaDaughters > 100) continue; //kuba
+		
+		// decayLength
+		//if (decayLength < con_decayLength) continue;
+		
+		// kDca
+		if (kRDca < 60) continue; //orig. kDca
+		
+		// p1Dca
+		if (p1RDca < 60) continue; //orig. pi1Dca
+		
+		// p2Dca
+		if (p2RDca < 60) continue; //orig. pi2Dca
+
+    if (mdV0Max > 250) continue;
+		
+		// V0max missing
+		//
+		// dcaDpmToPv not in our cuts, maybe incude
+		//
+		// kRPt
+		if (kRPt < 0.3) continue;
+		
+		// p1RPt
+		if (p1RPt < 0.3) continue;
+		
+		// p2RPt
+		if (p2RPt < 0.3) continue;	
+		
+
+    h2_DecayLenght_RvsMC_cut->Fill(decayLength, MCdecayLength);
+    h2_DecayLenght_RvsMC_cut->GetXaxis()->SetTitle("decayLength");
+    h2_DecayLenght_RvsMC_cut->GetYaxis()->SetTitle("MCdecayLength");
 		    
 		
 	} //end entries loop
@@ -390,6 +460,9 @@ void SaveFastSimHistos()
 		h_cosTheta->Write();		
 		h_PairDCAmax->Write();		
 		h_DecayLength->Write();
+    h_DecayLengthMC->Write();
+    h2_DecayLenght_RvsMC->Write();
+    h2_DecayLenght_RvsMC_cut->Write();
     h_dV0Max->Write();
 		
 		h_k_DCA->Write();
