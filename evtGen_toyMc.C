@@ -152,7 +152,6 @@ const Double_t ptEdgeDca[nPtBinsDca + 1] =
       4.  , 6. , 12.0
    };
 
-
 TH1D* h1Vz[nCentHftRatio];
 
 TH1D* hHftRatio1[nParticles][nEtasHftRatio][nVzsHftRatio][nPhisHftRatio][nCentHftRatio];
@@ -164,9 +163,12 @@ TH1D* hTpcPiMinus[nCentHftRatio];
 TH1D* hTpcKPlus[nCentHftRatio];
 TH1D* hTpcKMinus[nCentHftRatio];
 
-string outFileName = "Dpm.toyMc.root";
-//std::pair<int, int> const decayChannels(673, 735);
-std::pair<float, float> const momentumRange(0, 15);
+//TF1 *InvEffWeight;
+
+string outFileName = "Dpm.toyMc.root"; //default output file name (do not change - see submit XML)
+
+std::pair<float, float> const momentumRange(0, 11); //full momentum range
+//std::pair<float, float> const momentumRange(0, 2); //for low-pT to increase statistics
 
 float const gVzCut = 6.0e4;
 float const acceptanceRapidity = 1.0;
@@ -193,14 +195,12 @@ void write();
 // TPythia6Decayer* pydecay;
 StarEvtGenDecayer* starEvtGenDecayer = NULL;
 
-//std::pair<float, float> const momentumRange(0, 15);
-
-//float const acceptanceRapidity = 1.0;
-
 //============== main  program ==================
 void evtGen_toyMc(int npart = 1000)
 {
+   cout<<"Starting EvtGen"<<endl;
    initEvtGen();
+   cout<<"initEvtGen() done..."<<endl;
    TStopwatch*   stopWatch = new TStopwatch();
    stopWatch->Start();
    gRandom->SetSeed();
@@ -300,15 +300,34 @@ void decayAndFill(int PDG_id, TLorentzVector* b, double const weight, TClonesArr
 {
    //TLorentzVector ElectronMomentum;
 
-   //cout << "check point here A " << endl;
-
    starEvtGenDecayer->Decay(PDG_id, b); //Decay particle
-
-   //cout << "check point here B " << endl;
 
    starEvtGenDecayer->ImportParticles(&daughters); //get daughters from decay
 
-   //cout << "check point here C " << endl;
+  //add cut on MCdecayLength here (use while?)
+
+/*
+  TVector3 MCdecLength;
+  MCdecLength.SetXYZ(0,0,0); //set default value
+
+  while( MCdecLength.Mag() < MCdecLengthCut ) //set cut in run macro
+  {
+    starEvtGenDecayer->Decay(PDG_id, b); //Decay particle
+
+    starEvtGenDecayer->ImportParticles(&daughters); //get daughters from decay
+
+    TParticle* testParticle = (TParticle*)daughters.At(0); //take first daughter particle
+
+    MCdecLength.SetXYZ(testParticle->Vx() * 1000., testParticle->Vy() * 1000., testParticle->Vz() * 1000.); //find secondary vertex
+
+    if(MCdecLength.Mag() < MCdecLengthCut)
+    {
+      daughters.Clear(); //clear daugters if the MC decay length is smaller than cut
+    }
+  }
+
+
+*/
 
   TLorentzVector kMom;
 	TLorentzVector p1Mom;
@@ -366,6 +385,8 @@ void fill(int const kf, TLorentzVector* b, double weight, TLorentzVector const& 
       centrality = i;
     }
   }
+
+  float const MCdecayLength = v00.Mag(); //generated decay length, from generator, before smearing
 
 	TVector3 const vertex = getVertex(centrality);
 	// smear primary vertex
@@ -496,7 +517,8 @@ void fill(int const kf, TLorentzVector* b, double weight, TLorentzVector const& 
 	arr[iArr++] = v0.Z();
 
 	arr[iArr++] = dcaDaughters;
-	arr[iArr++] = decayLength;
+	arr[iArr++] = decayLength; //reconstrucetd decay length
+  arr[iArr++] = MCdecayLength; //MC decay length
 	arr[iArr++] = dcaDpmToPv;
 	arr[iArr++] = cosTheta;
 	arr[iArr++] = angle12;
@@ -592,7 +614,9 @@ void fill(int const kf, TLorentzVector* b, double weight, TLorentzVector const& 
 
 void getKinematics(TLorentzVector& b, double const mass)
 {
-   float const pt = gRandom->Uniform(momentumRange.first, momentumRange.second);
+//   float const pt = gRandom->Uniform(momentumRange.first, momentumRange.second); //flat pT distribution
+   float const pt = fWeightFunction->GetRandom(momentumRange.first, momentumRange.second); //realistic pT distribution
+   //float const pt = InvEffWeight->GetRandom(momentumRange.first, momentumRange.second);
    float const y = gRandom->Uniform(-acceptanceRapidity, acceptanceRapidity);
    float const phi = TMath::TwoPi() * gRandom->Rndm();
 
@@ -659,8 +683,8 @@ void bookObjects()
 	cout << "Loading input HFT ratios and DCA ..." << endl;
 	
 	
-	TFile *fHftRatio1 = new TFile("./input/HFT_Ratio_VsPt_Centrality_Eta_Phi_Vz_Zdcx_1Sigma_DCA_cuts_binom_err_new_final_new_02.root", "read"); //strict nSigma cuts (1Sigma)
-  TFile fDca1("./input/2DProjection_simCent_NoBinWidth_3D_Dca_VsPt_Centrality_Eta_Phi_Vz_Zdcx_1Sigma_DCA_cuts_new_final.root");
+	TFile *fHftRatio1 = new TFile("./input/HFT_Ratio_VsPt_Centrality_Eta_Phi_Vz_Zdcx_1Sigma_DCA_cuts_binom_err.root", "read"); //strict nSigma cuts (1Sigma)
+  TFile fDca1("./input/2DProjection_simCent_NoBinWidth_3D_Dca_VsPt_Centrality_Eta_Phi_Vz_Zdcx_1Sigma_DCA_cuts.root");
 
 //cout<<"test"<<endl;
 	
@@ -730,7 +754,14 @@ void bookObjects()
 	fTpcPiMinus.Close();
 	fTpcKPlus.Close();
 	fTpcKMinus.Close();
-
+/*
+  cout<<" Loading weight function for pT generation "<<endl;
+  TFile *InvEffWeightFile = new TFile("./input/Inverse_eff_weight.root", "read");
+  
+  InvEffWeight = (TF1*)InvEffWeightFile->Get("InvEffFunc");
+  
+  InvEffWeightFile->Close();
+*/
 	cout << "Done with loading all files ..." << endl;
 
 	result = new TFile(outFileName.c_str(), "recreate");
@@ -742,7 +773,7 @@ void bookObjects()
 	nt = new TNtuple("nt", "", "cent:vx:vy:vz:vzIdx:"
 			"pid:w:m:pt:eta:y:phi:v0x:v0y:v0z:" // MC Dpm
 			"rM:rPt:rEta:rY:rPhi:rV0x:rV0y:rV0z:" // Rc Dpm
-			"dcaDaughters:decayLength:dcaDpmToPv:cosTheta:angle12:cosThetaStar:" // Rc pair
+			"dcaDaughters:decayLength:MCdecayLength:dcaDpmToPv:cosTheta:angle12:cosThetaStar:" // Rc pair
 			"kM:kPt:kEta:kY:kPhi:kDca:" // MC Kaon
 			"kRM:kRPt:kREta:kRY:kRPhi:kRVx:kRVy:kRVz:kRDca:kRSDca:kRDcaXY:kRDcaZ:kEtaIdx:kPtIdx:kTpc:" // Rc Kaon
 			"p1M:p1Pt:p1Eta:p1Y:p1Phi:p1Dca:" // MC Pion1
@@ -1054,9 +1085,12 @@ void write()
 }
 void initEvtGen()
 {
+    cout<<"initEvtGen start..."<<endl;
     EvtRandomEngine* eng = 0;
     eng = new EvtSimpleRandomEngine();
+    cout<<"setting random engine..."<<endl;
     EvtRandom::setRandomEngine((EvtRandomEngine*)eng);
+    cout<<"done"<<endl;
     EvtAbsRadCorr* radCorrEngine = 0;
     std::list<EvtDecayBase*> extraModels;
  

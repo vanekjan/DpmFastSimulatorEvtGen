@@ -5,13 +5,17 @@
 //#include <iostream>
 //#include"TROOT.h"
 
+// /star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/2018-07-31_13-54_EvtGen_final/merge/output.root //physics stream
+// /star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/2019-03-21_04-15_EvtGen_new_pT_resolution_test/merge/output.root
 
-void run_nt_TMVA_Cuts(TString infile = "/star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/2018-04-20_02-38_new_HFT_pT_bins_final/merge/output.root", 
-                      TString outfile = "/star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/Histo_output/TMVA/Dpm.out_eff_TMVA_6_pT_bins_iter_2.toyMc.root") 
+// /star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/2019-08-10_12-26/merge //sst+nosst streams
+
+void run_nt_TMVA_Cuts(TString infile = "/star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/2019-08-20_04-04/merge/output.root", 
+                      TString outfile = "/star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/Histo_output/TMVA/physics/Dpm.out_eff_new_11_pT_bins_TMVA_ana_cuts_physics_real_pT.toyMc.root") 
   { //for output from submit
 //void run_nt(TString infile = "Dpm.toyMc.root", TString outfile = "Dpm.out_ana_cuts.toyMc.root") { //for output from local test
   std::cout << "start " << std::endl;
-	gROOT->ProcessLine(".L nt_TMVA_Cuts.C+");
+	gROOT->ProcessLine(".L nt_TMVA_Cuts.C++");
 	//gROOT->ProcessLine(".L nt.C");
 	TFile *f_input = new TFile(infile, "open");
 	TTree *tree_nt = (TTree*)f_input->Get("nt");
@@ -24,6 +28,8 @@ void run_nt_TMVA_Cuts(TString infile = "/star/u/vanekjan/500GBStorage/vanekjan/m
 	
 	n.Set_con_kRPt(0.3);
 	n.Set_con_pRPt(0.3);
+
+  n.Set_ReadMode(1);//ReadMode = 0 - pre-cuts, ReadMode = 1 - TMVA analysis cuts, ReadMode = 2 - TMVA loose cuts, ReadMode = 3 - TMVA tight cuts
 
   //set topological cuts in tmvaCuts.h
 	//_____________________________________________________________________________

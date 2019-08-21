@@ -6,8 +6,8 @@
 //#include"TROOT.h"
 
 
-void run_nt(TString infile = "/star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/2018-07-31_13-54/merge/output.root", 
-            TString outfile = "/star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/Histo_output/Dpm.out_eff_TMVA_ana_pT_bins_EvtGen_new_production_final.toyMc.root") 
+void run_nt(TString infile = "/star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/2018-07-31_13-54_EvtGen_final/merge/output.root", 
+            TString outfile = "/star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/Histo_output/Dpm.out_eff_new_11_pT_bins_old_ana_cuts_physics_test_old_pT_cut.toyMc.root") 
   { //for output from submit
 
 //void run_nt(TString infile = "Dpm.toyMc.root", TString outfile = "Dpm.out_ana_cuts.toyMc.root") { //for output from local test
@@ -23,7 +23,7 @@ void run_nt(TString infile = "/star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGen
 	n.Set_con_cent_down(0);
 	n.Set_con_v0z(60000.);
   
-  n.Set_con_kRPt(0.5);
+  n.Set_con_kRPt(0.5); //test with old 0.5 GeV/c cut
 	n.Set_con_pRPt(0.5);
 
 	//analysis cuts

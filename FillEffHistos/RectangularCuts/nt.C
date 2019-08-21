@@ -33,8 +33,11 @@ void nt::Loop()
 	//by  b_branchname->GetEntry(ientry); //read only this branch
 	if (fChain == 0) return;
 
-  const int nPtBins = 12;  
-  double pT_bins[nPtBins+1] = { 1., 2., 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 7., 8., 10. }; //pT binning - for analysis
+  const int nCentBins = 4;
+  //const int nPtBins = 12;  
+  //double pT_bins[nPtBins+1] = {1., 2., 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 7., 8., 10. }; //pT binning - for analysis
+  const int nPtBins = 11;  
+  double pT_bins[nPtBins+1] = { 0., 0.5, 1.,1.5, 2., 2.5, 3., 4., 5., 6., 8., 10. }; //new pT binning - same as D0
 
   //const int nPtBins = 6;
   //float const pT_bins[nPtBins+1] = {0., 1., 2., 3., 5., 7., 10.}; //my TMVA pT bins, for D0 nSignal estimation
@@ -67,81 +70,22 @@ void nt::Loop()
 	h_r_dpm_phi->Sumw2();
 	h_r_dpm_eta_phi->Sumw2();
   //----------------------------------------------------------------------------------------------------
+  //invariant mass hitograms
+  TH1F *h_D_inv_mass_base = new TH1F("D_inv_mass", "D_inv_mass", 40, 1.7, 2.1); //base histogram for D+- inv. mass
 
-  // reconstructed Dpm histograms with TOF matching:
-  //at least 1 daughter has to have TOF
-  TH1F *h_r_dpm_pt_TOF_match[9];
-  for(unsigned int i = 0; i<9; i++)
+  TH1F *h_D_inv_mass_array[nPtBins][nCentBins]; //inv. mass histograms - same as in analysis
+
+  for(unsigned int i = 0; i < nCentBins; i++)
   {
-    h_r_dpm_pt_TOF_match[i] = new TH1F(Form("h_r_dpm_pt_TOF_match%i", i),Form("Reconstructed_Dpm_hybrid_TOF_cent_%i", i),nPtBins, pT_bins);
-    h_r_dpm_pt_TOF_match[i]->Sumw2();
-
-  }
-	TH1F *h_r_dpm_phi_TOF_match = new TH1F("h_r_dpm_phi_TOF_match","Reconstructed_Dpm_hybrid_TOF_phi",64, -3.2, 3.2);
-	TH2F *h_r_dpm_eta_phi_TOF_match = new TH2F("h_r_dpm_eta_phi_TOF_match","Reconstructed_Dpm_hybrid_TOF_eta_phi", 140, -1.2, 1.2, 64, -3.2, 3.2);
-
-	h_r_dpm_phi_TOF_match->Sumw2();
-	h_r_dpm_eta_phi_TOF_match->Sumw2();
-  //----------------------------------------------------------------------------------------------------------------------------------
-
-  //individual possible combiunations seperately:
-  //only one daughter has TOF
-  TH1F *h_r_dpm_pt_TOF_match_one[9];
-  for(unsigned int i = 0; i<9; i++)
-  {
-    h_r_dpm_pt_TOF_match_one[i] = new TH1F(Form("h_r_dpm_pt_TOF_match_one%i", i),Form("Reconstructed_Dpm_one_TOF_cent_%i", i),nPtBins, pT_bins);
-    h_r_dpm_pt_TOF_match_one[i]->Sumw2();
-
-  }
-	TH1F *h_r_dpm_phi_TOF_match_one = new TH1F("h_r_dpm_phi_TOF_match_one","Reconstructed_Dpm_one_TOF_phi",64, -3.2, 3.2);
-	TH2F *h_r_dpm_eta_phi_TOF_match_one = new TH2F("h_r_dpm_eta_phi_TOF_match_one","Reconstructed_Dpm_one_TOF_eta_phi", 140, -1.2, 1.2, 64, -3.2, 3.2);
-
-	h_r_dpm_phi_TOF_match_one->Sumw2();
-	h_r_dpm_eta_phi_TOF_match_one->Sumw2();
-  //______________________________________________________________________________________________________________________________________________
-  //two of three daughter have TOF
-  TH1F *h_r_dpm_pt_TOF_match_two[9];
-  for(unsigned int i = 0; i<9; i++)
-  {
-    h_r_dpm_pt_TOF_match_two[i] = new TH1F(Form("h_r_dpm_pt_TOF_match_two%i", i),Form("Reconstructed_Dpm_two_TOF_cent_%i", i),nPtBins, pT_bins);
-    h_r_dpm_pt_TOF_match_two[i]->Sumw2();
-
-  }
-	TH1F *h_r_dpm_phi_TOF_match_two = new TH1F("h_r_dpm_phi_TOF_match_two","Reconstructed_Dpm_two_TOF_phi",64, -3.2, 3.2);
-	TH2F *h_r_dpm_eta_phi_TOF_match_two = new TH2F("h_r_dpm_eta_phi_TOF_match_two","Reconstructed_Dpm_two_TOF_eta_phi", 140, -1.2, 1.2, 64, -3.2, 3.2);
-
-	h_r_dpm_phi_TOF_match_two->Sumw2();
-	h_r_dpm_eta_phi_TOF_match_two->Sumw2();
-  //______________________________________________________________________________________________________________________________________________
-  //all three daughter have TOF
-  TH1F *h_r_dpm_pt_TOF_match_three[9];
-  for(unsigned int i = 0; i<9; i++)
-  {
-    h_r_dpm_pt_TOF_match_three[i] = new TH1F(Form("h_r_dpm_pt_TOF_match_three%i", i),Form("Reconstructed_Dpm_three_TOF_cent_%i", i),nPtBins, pT_bins);
-    h_r_dpm_pt_TOF_match_three[i]->Sumw2();
-
-  }
-	TH1F *h_r_dpm_phi_TOF_match_three = new TH1F("h_r_dpm_phi_TOF_match_three","Reconstructed_Dpm_three_TOF_phi",64, -3.2, 3.2);
-	TH2F *h_r_dpm_eta_phi_TOF_match_three = new TH2F("h_r_dpm_eta_phi_TOF_match_three","Reconstructed_Dpm_three_TOF_eta_phi", 140, -1.2, 1.2, 64, -3.2, 3.2);
-
-	h_r_dpm_phi_TOF_match_three->Sumw2();
-	h_r_dpm_eta_phi_TOF_match_three->Sumw2();
-  //______________________________________________________________________________________________________________________________________________
-  //none of daughters has TOF - reject all that have TOF
-  TH1F *h_r_dpm_pt_TOF_match_zero[9];
-  for(unsigned int i = 0; i<9; i++)
-  {
-    h_r_dpm_pt_TOF_match_zero[i] = new TH1F(Form("h_r_dpm_pt_TOF_match_zero%i", i),Form("Reconstructed_Dpm_zero_TOF_cent_%i", i),nPtBins, pT_bins);
-    h_r_dpm_pt_TOF_match_zero[i]->Sumw2();
-
-  }
-	TH1F *h_r_dpm_phi_TOF_match_zero = new TH1F("h_r_dpm_phi_TOF_match_zero","Reconstructed_Dpm_zero_TOF_phi",64, -3.2, 3.2);
-	TH2F *h_r_dpm_eta_phi_TOF_match_zero = new TH2F("h_r_dpm_eta_phi_TOF_match_zero","Reconstructed_Dpm_zero_TOF_eta_phi", 140, -1.2, 1.2, 64, -3.2, 3.2);
-
-	h_r_dpm_phi_TOF_match_zero->Sumw2();
-	h_r_dpm_eta_phi_TOF_match_zero->Sumw2();
-  //------------------------------------------------------------------------------------------------------------------------------------------------
-
+    for(unsigned int j = 0; j < nPtBins; j++)
+    {
+      //cout<<i<<" "<<j<<endl;
+      h_D_inv_mass_array[j][i] = (TH1F*)h_D_inv_mass_base->Clone();
+      h_D_inv_mass_array[j][i]->SetNameTitle(Form("D_inv_mass_cent_%i_pT_%i", i, j), Form("D_inv_mass_cent_%i_pT_%i", i, j));
+    }
+  }  
+  //-------------------------------------------------------------------------------------------------------
+  
 	// now cuts
 	TH1D *n_cuts = new TH1D("n_cuts","n_cuts",100,0,100);
 
@@ -247,109 +191,32 @@ void nt::Loop()
 		h_r_dpm_phi->Fill(phi);
 		h_r_dpm_eta_phi->Fill(eta, phi);
 
-    //TOF matching, "full" TOF - all particles have to have TOF
-    //if (kTof != 1 || p1Tof != 1 || p2Tof != 1) continue;
-    //n_cuts->Fill(15);
 
-    //TOF matching, always match K - anternative to hybrid method
-    if (kTof == 1)
+
+    int ptBin = -1; //find pT bin (as in real data, not TMVA!!!)
+
+    for(int j = 0; j < nPtBins; j++) //loop over pT bins
     {
-    n_cuts->Fill(15);
-
-    // reconstructed Dpm with "soft" TOF matching
-		if(cent > -0.5 and cent < 0.5) h_r_dpm_pt_TOF_match[0]->Fill(pt);
-		if(cent > 0.5 and cent < 1.5) h_r_dpm_pt_TOF_match[1]->Fill(pt);
-		if(cent > 1.5 and cent < 2.5) h_r_dpm_pt_TOF_match[2]->Fill(pt);
-		if(cent > 2.5 and cent < 3.5) h_r_dpm_pt_TOF_match[3]->Fill(pt);
-		if(cent > 3.5 and cent < 4.5) h_r_dpm_pt_TOF_match[4]->Fill(pt);
-		if(cent > 4.5 and cent < 5.5) h_r_dpm_pt_TOF_match[5]->Fill(pt);
-		if(cent > 5.5 and cent < 6.5) h_r_dpm_pt_TOF_match[6]->Fill(pt);
-		if(cent > 6.5 and cent < 7.5) h_r_dpm_pt_TOF_match[7]->Fill(pt);
-		if(cent > 7.5 and cent < 8.5) h_r_dpm_pt_TOF_match[8]->Fill(pt);
-
-    h_r_dpm_phi_TOF_match->Fill(phi);
-		h_r_dpm_eta_phi_TOF_match->Fill(eta, phi);
+      if(pt > pT_bins[j] && pt <= pT_bins[j+1])
+      {
+        ptBin = j;
+      }
     }
 
-    //TOF matching, fill only if only one of daughters has TOF
-    if ( (kTof == 1 && p1Tof == 0 && p2Tof == 0) || (kTof == 0 && p1Tof == 1 && p2Tof == 0) || (kTof == 0 && p1Tof == 0 && p2Tof == 1) )
-    {
-    n_cuts->Fill(16);
+    int centBin_9 = (int)cent; //set centrality bin
 
-    // reconstructed Dpm with TOF matching
-		if(cent > -0.5 and cent < 0.5) h_r_dpm_pt_TOF_match_one[0]->Fill(pt);
-		if(cent > 0.5 and cent < 1.5) h_r_dpm_pt_TOF_match_one[1]->Fill(pt);
-		if(cent > 1.5 and cent < 2.5) h_r_dpm_pt_TOF_match_one[2]->Fill(pt);
-		if(cent > 2.5 and cent < 3.5) h_r_dpm_pt_TOF_match_one[3]->Fill(pt);
-		if(cent > 3.5 and cent < 4.5) h_r_dpm_pt_TOF_match_one[4]->Fill(pt);
-		if(cent > 4.5 and cent < 5.5) h_r_dpm_pt_TOF_match_one[5]->Fill(pt);
-		if(cent > 5.5 and cent < 6.5) h_r_dpm_pt_TOF_match_one[6]->Fill(pt);
-		if(cent > 6.5 and cent < 7.5) h_r_dpm_pt_TOF_match_one[7]->Fill(pt);
-		if(cent > 7.5 and cent < 8.5) h_r_dpm_pt_TOF_match_one[8]->Fill(pt);
+    int centBin = -1;
 
-    h_r_dpm_phi_TOF_match_one->Fill(phi);
-		h_r_dpm_eta_phi_TOF_match_one->Fill(eta, phi);
-    }
+    if( centBin_9 == 7 || centBin_9 == 8 ) centBin = 0; //0-10%
+    if( centBin_9 == 4 || centBin_9 == 5 || centBin_9 == 6  ) centBin = 1; //10-40%
+    if( centBin_9 == 0 || centBin_9 == 1 || centBin_9 ==  2 || centBin_9 ==  3 ) centBin = 2; //40-80%
+    //if( cent != -1 ) centBin = 3; //0-80%
 
-    //TOF matching, fill only if two of daughters have TOF
-    if ( (kTof == 1 && p1Tof == 1 && p2Tof == 0) || (kTof == 1 && p1Tof == 0 && p2Tof == 1) || (kTof == 0 && p1Tof == 1 && p2Tof == 1) )
-    {
-    n_cuts->Fill(17);
 
-    // reconstructed Dpm with TOF matching
-		if(cent > -0.5 and cent < 0.5) h_r_dpm_pt_TOF_match_two[0]->Fill(pt);
-		if(cent > 0.5 and cent < 1.5) h_r_dpm_pt_TOF_match_two[1]->Fill(pt);
-		if(cent > 1.5 and cent < 2.5) h_r_dpm_pt_TOF_match_two[2]->Fill(pt);
-		if(cent > 2.5 and cent < 3.5) h_r_dpm_pt_TOF_match_two[3]->Fill(pt);
-		if(cent > 3.5 and cent < 4.5) h_r_dpm_pt_TOF_match_two[4]->Fill(pt);
-		if(cent > 4.5 and cent < 5.5) h_r_dpm_pt_TOF_match_two[5]->Fill(pt);
-		if(cent > 5.5 and cent < 6.5) h_r_dpm_pt_TOF_match_two[6]->Fill(pt);
-		if(cent > 6.5 and cent < 7.5) h_r_dpm_pt_TOF_match_two[7]->Fill(pt);
-		if(cent > 7.5 and cent < 8.5) h_r_dpm_pt_TOF_match_two[8]->Fill(pt);
+    if(ptBin < 0 ) continue; //reject Dpm with pT out of range
 
-    h_r_dpm_phi_TOF_match_two->Fill(phi);
-		h_r_dpm_eta_phi_TOF_match_two->Fill(eta, phi);
-    }
-
-    //TOF matching, fill only if all three daughters have TOF
-    if ( kTof == 1 && p1Tof == 1 && p2Tof == 1 )
-    {
-    n_cuts->Fill(18);
-
-    // reconstructed Dpm with TOF matching
-		if(cent > -0.5 and cent < 0.5) h_r_dpm_pt_TOF_match_three[0]->Fill(pt);
-		if(cent > 0.5 and cent < 1.5) h_r_dpm_pt_TOF_match_three[1]->Fill(pt);
-		if(cent > 1.5 and cent < 2.5) h_r_dpm_pt_TOF_match_three[2]->Fill(pt);
-		if(cent > 2.5 and cent < 3.5) h_r_dpm_pt_TOF_match_three[3]->Fill(pt);
-		if(cent > 3.5 and cent < 4.5) h_r_dpm_pt_TOF_match_three[4]->Fill(pt);
-		if(cent > 4.5 and cent < 5.5) h_r_dpm_pt_TOF_match_three[5]->Fill(pt);
-		if(cent > 5.5 and cent < 6.5) h_r_dpm_pt_TOF_match_three[6]->Fill(pt);
-		if(cent > 6.5 and cent < 7.5) h_r_dpm_pt_TOF_match_three[7]->Fill(pt);
-		if(cent > 7.5 and cent < 8.5) h_r_dpm_pt_TOF_match_three[8]->Fill(pt);
-
-    h_r_dpm_phi_TOF_match_three->Fill(phi);
-		h_r_dpm_eta_phi_TOF_match_three->Fill(eta, phi);
-    }
-
-    //TOF matching, fill only if all three daughters don't have TOF
-    if ( kTof == 0 && p1Tof == 0 && p2Tof == 0 )
-    {
-    n_cuts->Fill(19);
-
-    // reconstructed Dpm with TOF matching
-		if(cent > -0.5 and cent < 0.5) h_r_dpm_pt_TOF_match_zero[0]->Fill(pt);
-		if(cent > 0.5 and cent < 1.5) h_r_dpm_pt_TOF_match_zero[1]->Fill(pt);
-		if(cent > 1.5 and cent < 2.5) h_r_dpm_pt_TOF_match_zero[2]->Fill(pt);
-		if(cent > 2.5 and cent < 3.5) h_r_dpm_pt_TOF_match_zero[3]->Fill(pt);
-		if(cent > 3.5 and cent < 4.5) h_r_dpm_pt_TOF_match_zero[4]->Fill(pt);
-		if(cent > 4.5 and cent < 5.5) h_r_dpm_pt_TOF_match_zero[5]->Fill(pt);
-		if(cent > 5.5 and cent < 6.5) h_r_dpm_pt_TOF_match_zero[6]->Fill(pt);
-		if(cent > 6.5 and cent < 7.5) h_r_dpm_pt_TOF_match_zero[7]->Fill(pt);
-		if(cent > 7.5 and cent < 8.5) h_r_dpm_pt_TOF_match_zero[8]->Fill(pt);
-
-    h_r_dpm_phi_TOF_match_zero->Fill(phi);
-		h_r_dpm_eta_phi_TOF_match_zero->Fill(eta, phi);
-    }
+    h_D_inv_mass_array[ptBin][centBin]->Fill(rM);
+    h_D_inv_mass_array[ptBin][3]->Fill(rM); //centrality 0-80%   
     
 		
 	} //end entries loop
@@ -373,45 +240,14 @@ void nt::Loop()
 	h_r_dpm_phi->Write();
 	h_r_dpm_eta_phi->Write();
 
-  //reconstructed Dpm, "soft" TOF matching
-  for(unsigned int j = 0; j<9; j++ )
-  {	
-    h_r_dpm_pt_TOF_match[j]->Write();
-	}
-	h_r_dpm_phi_TOF_match->Write();
-	h_r_dpm_eta_phi_TOF_match->Write();
+  for(unsigned int j = 0; j < nCentBins; j++)
+  {
+    for(unsigned int k = 0; k < nPtBins; k++)
+    {
+      h_D_inv_mass_array[k][j]->Write();
+    }
+  }
 
-  //reconstructed Dpm, one daughter has TOF
-  for(unsigned int j = 0; j<9; j++ )
-  {	
-    h_r_dpm_pt_TOF_match_one[j]->Write();
-	}
-	h_r_dpm_phi_TOF_match_one->Write();
-	h_r_dpm_eta_phi_TOF_match_one->Write();
-
-  //reconstructed Dpm, two daughters have TOF
-  for(unsigned int j = 0; j<9; j++ )
-  {	
-    h_r_dpm_pt_TOF_match_two[j]->Write();
-	}
-	h_r_dpm_phi_TOF_match_two->Write();
-	h_r_dpm_eta_phi_TOF_match_two->Write();
-
-  //reconstructed Dpm, three daughters have TOF
-  for(unsigned int j = 0; j<9; j++ )
-  {	
-    h_r_dpm_pt_TOF_match_three[j]->Write();
-	}
-	h_r_dpm_phi_TOF_match_three->Write();
-	h_r_dpm_eta_phi_TOF_match_three->Write();
-
-  //reconstructed Dpm, no daughters have TOF
-  for(unsigned int j = 0; j<9; j++ )
-  {	
-    h_r_dpm_pt_TOF_match_zero[j]->Write();
-	}
-	h_r_dpm_phi_TOF_match_zero->Write();
-	h_r_dpm_eta_phi_TOF_match_zero->Write();
 
   n_cuts->Write();
 

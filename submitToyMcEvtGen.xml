@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<job nProcesses="40" simulateSubmission="false">
+<job nProcesses="40" copyInputLocally="false" simulateSubmission="false">
 
         <stdout URL="file:./jobs/log/&productionId;/$JOBID.log" />
         <stderr URL="file:./jobs/err/&productionId;/$JOBID.err" />
@@ -12,7 +12,7 @@
                                                 
 	<ResourceUsage>
 		<Memory>
-			<MinMemory>3000</MinMemory>
+			<MinMemory>2900</MinMemory>
 		</Memory>
 	</ResourceUsage>
 
@@ -32,7 +32,9 @@ chmod g+rw *.root
     <File>file:./StRoot/</File>
     <File>file:./.sl73_gcc485/</File>
     <File>file:./run_evtGent_toyMc.C</File>
-		<File>file:./evtGen_toyMc.C</File>
+    <File>file:./evtGen_toyMc.C</File>
+    <File>file:./evtGen_toyMc_C.d</File>
+    <File>file:./evtGen_toyMc_C.so</File>
     <File>file:./input/</File>
     <File>file:./Dpm.D_DALITZ.DEC</File>
 	</Package>
