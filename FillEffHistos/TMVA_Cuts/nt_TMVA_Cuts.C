@@ -114,7 +114,6 @@ void nt_TMVA_Cuts::Loop()
         if(ReadMode == 1)
         {
           filename << "./TMVA_cuts/002_new_11pT_bins_2_pT_regions/analysis/cuts_cent_" << j << ".txt";
-          //filename << "./TMVA_cuts/004_recrtangular_cuts_test/analysis/cuts_cent_" << j << ".txt";
           
         }
         if(ReadMode == 2)
@@ -127,6 +126,12 @@ void nt_TMVA_Cuts::Loop()
           filename << "./TMVA_cuts/002_new_11pT_bins_2_pT_regions/tight/30_percent/cuts_tight_cent_" << j << ".txt";
           
         }
+        if(ReadMode == 4)
+        {
+          filename << "./TMVA_cuts/004_recrtangular_cuts_test/analysis/cuts_cent_" << j << ".txt";
+ 
+        }
+
         
         
         CutsFile[j].open(filename.str().c_str());
@@ -202,21 +207,32 @@ void nt_TMVA_Cuts::Loop()
 		// if (Cut(ientry) < 0) continue;
 
 		// generated Dpm
-		if(cent > -0.5 and cent < 0.5) h_dpm_pt[0]->Fill(pt);
-		if(cent > 0.5 and cent < 1.5) h_dpm_pt[1]->Fill(pt);
-		if(cent > 1.5 and cent < 2.5) h_dpm_pt[2]->Fill(pt);
-		if(cent > 2.5 and cent < 3.5) h_dpm_pt[3]->Fill(pt);
-		if(cent > 3.5 and cent < 4.5) h_dpm_pt[4]->Fill(pt);
-		if(cent > 4.5 and cent < 5.5) h_dpm_pt[5]->Fill(pt);
-		if(cent > 5.5 and cent < 6.5) h_dpm_pt[6]->Fill(pt);
-		if(cent > 6.5 and cent < 7.5) h_dpm_pt[7]->Fill(pt);
-		if(cent > 7.5 and cent < 8.5) h_dpm_pt[8]->Fill(pt);
+		if(cent > -0.5 and cent < 0.5) h_dpm_pt[0]->Fill(pt,w);
+		if(cent > 0.5 and cent < 1.5) h_dpm_pt[1]->Fill(pt,w);
+		if(cent > 1.5 and cent < 2.5) h_dpm_pt[2]->Fill(pt,w);
+		if(cent > 2.5 and cent < 3.5) h_dpm_pt[3]->Fill(pt,w);
+		if(cent > 3.5 and cent < 4.5) h_dpm_pt[4]->Fill(pt,w);
+		if(cent > 4.5 and cent < 5.5) h_dpm_pt[5]->Fill(pt,w);
+		if(cent > 5.5 and cent < 6.5) h_dpm_pt[6]->Fill(pt,w);
+		if(cent > 6.5 and cent < 7.5) h_dpm_pt[7]->Fill(pt,w);
+		if(cent > 7.5 and cent < 8.5) h_dpm_pt[8]->Fill(pt,w);
+/*
+    if(cent > -0.5 and cent < 0.5) h_dpm_pt[0]->Fill(rPt,w);
+    if(cent > 0.5 and cent < 1.5) h_dpm_pt[1]->Fill(rPt,w);
+    if(cent > 1.5 and cent < 2.5) h_dpm_pt[2]->Fill(rPt,w);
+    if(cent > 2.5 and cent < 3.5) h_dpm_pt[3]->Fill(rPt,w);
+    if(cent > 3.5 and cent < 4.5) h_dpm_pt[4]->Fill(rPt,w);
+    if(cent > 4.5 and cent < 5.5) h_dpm_pt[5]->Fill(rPt,w);
+    if(cent > 5.5 and cent < 6.5) h_dpm_pt[6]->Fill(rPt,w);
+    if(cent > 6.5 and cent < 7.5) h_dpm_pt[7]->Fill(rPt,w);
+    if(cent > 7.5 and cent < 8.5) h_dpm_pt[8]->Fill(rPt,w);
+*/
 		h_dpm_phi->Fill(phi);
 		h_dpm_eta_phi->Fill(eta, phi);
 
 		//if (TMath::Abs(rV0z) > con_rV0z) continue;
 		// |TPC Vz|
-		if (TMath::Abs(v0z) > con_v0z) continue;
+		//if (TMath::Abs(v0z) > con_v0z) continue;
 		n_cuts->Fill(1);
 		// |TPC Vz - VPD Vz| missing
 		//
@@ -225,6 +241,9 @@ void nt_TMVA_Cuts::Loop()
 		if (cent > con_cent_up) continue;
 		if (cent < con_cent_down) continue;
 		n_cuts->Fill(2);
+
+                if ( !(fabs(rY)<1) ) continue; //cut on reco rapidity of the D meson
+
 		if (fabs(kREta) > 1 || fabs(p1REta) > 1 || fabs(p2REta) > 1) continue;
 		// HFT
 		if (kHft != 1 || p1Hft != 1 || p2Hft != 1) continue;
@@ -250,10 +269,17 @@ void nt_TMVA_Cuts::Loop()
 
     for(int j = 0; j < nPtBins; j++) //loop over pT bins
     {
+
       if(pt > pT_bins[j] && pt <= pT_bins[j+1])
       {
         ptBin = j;
       }
+/*
+      if(rPt > pT_bins[j] && rPt <= pT_bins[j+1])
+      {
+        ptBin = j;
+      }
+*/
     }
 
     int centBin_9 = (int)cent; //set centrality bin
@@ -266,16 +292,18 @@ void nt_TMVA_Cuts::Loop()
     //if( cent != -1 ) centBin = 3; //0-80%
 
 
-    if(ptBin < 0 ) continue; //reject Dpm with pT out of range
+    if(ptBin < 0 || centBin < 0 ) continue; //reject Dpm with pT and centrality out of range
 
     if( (dcaDaughters < mdcaMax_cut[centBin][ptBin]*10000) &&
-    (decayLength > D_decayL_min_cut[centBin][ptBin]*10000 && decayLength < 20000. ) &&
+    (decayLength > D_decayL_min_cut[centBin][ptBin]*10000 && decayLength < 2000. ) &&
     (cosTheta > D_cos_theta_cut[centBin][ptBin] ) &&
     (mdV0Max <  D_dV0Max_cut[centBin][ptBin]*10000) &&
     ( p1RDca > pi1_dca_cut[centBin][ptBin]*10000 && p2RDca > pi2_dca_cut[centBin][ptBin]*10000 && kRDca > k_dca_cut[centBin][ptBin]*10000 ) )
     {
       // reconstructed Dpm without TOF matching
-    	h_r_dpm_pt[centBin_9]->Fill(pt); //added weigh
+      h_r_dpm_pt[centBin_9]->Fill(pt,w); //added weigh
+
+      //h_r_dpm_pt[centBin_9]->Fill(rPt,w);
 
      	h_r_dpm_phi->Fill(phi);
    		h_r_dpm_eta_phi->Fill(eta, phi);
@@ -288,13 +316,15 @@ void nt_TMVA_Cuts::Loop()
 
 
     if( (dcaDaughters < mdcaMax_cut[3][ptBin]*10000) &&
-    (decayLength > D_decayL_min_cut[3][ptBin]*10000 && decayLength < 20000. ) &&
+    (decayLength > D_decayL_min_cut[3][ptBin]*10000 && decayLength < 2000. ) &&
     (cosTheta > D_cos_theta_cut[3][ptBin] ) &&
     (mdV0Max <  D_dV0Max_cut[3][ptBin]*10000) &&
     ( p1RDca > pi1_dca_cut[3][ptBin]*10000 && p2RDca > pi2_dca_cut[3][ptBin]*10000 && kRDca > k_dca_cut[3][ptBin]*10000 ) )
     {
       // reconstructed Dpm without TOF matching
-    	h_r_dpm_pt_MB[centBin_9]->Fill(pt);
+      h_r_dpm_pt_MB[centBin_9]->Fill(pt,w);
+
+      //h_r_dpm_pt_MB[centBin_9]->Fill(rPt,w);
 
 	    h_r_dpm_phi_MB->Fill(phi);
   		h_r_dpm_eta_phi_MB->Fill(eta, phi);
