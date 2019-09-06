@@ -120,7 +120,7 @@ const Double_t ptEdgeHftRatio[nPtBinsHftRatio + 1] =
       1. , 1.1 , 1.2 , 1.3 , 1.4 , 1.5 , 1.6 , 1.7 , 1.8 , 1.9 ,
       2. , 2.2 , 2.4 , 2.6 , 2.8 , 3.0 ,
       3.4 , 3.8 , 4.2 , 4.6 , 5.0 ,  5.5 ,
-      6. , 6.5 , 7.0 , 8.0 , 9.0 , 10. , 11,  12.0
+      6. , 6.5 , 7.0 , 8.0 , 9.0 , 10. , 11.,  12.0
    };
 
 const Int_t nPhisHftRatio = 11;
@@ -167,7 +167,7 @@ TH1D* hTpcKMinus[nCentHftRatio];
 
 string outFileName = "Dpm.toyMc.root"; //default output file name (do not change - see submit XML)
 
-std::pair<float, float> const momentumRange(0, 11); //full momentum range
+std::pair<float, float> const momentumRange(5, 10); //momentum range
 //std::pair<float, float> const momentumRange(0, 2); //for low-pT to increase statistics
 
 float const gVzCut = 6.0e4;
@@ -614,8 +614,8 @@ void fill(int const kf, TLorentzVector* b, double weight, TLorentzVector const& 
 
 void getKinematics(TLorentzVector& b, double const mass)
 {
-//   float const pt = gRandom->Uniform(momentumRange.first, momentumRange.second); //flat pT distribution
-   float const pt = fWeightFunction->GetRandom(momentumRange.first, momentumRange.second); //realistic pT distribution
+   float const pt = gRandom->Uniform(momentumRange.first, momentumRange.second); //flat pT distribution
+   //float const pt = fWeightFunction->GetRandom(momentumRange.first, momentumRange.second); //realistic pT distribution
    //float const pt = InvEffWeight->GetRandom(momentumRange.first, momentumRange.second);
    float const y = gRandom->Uniform(-acceptanceRapidity, acceptanceRapidity);
    float const phi = TMath::TwoPi() * gRandom->Rndm();
