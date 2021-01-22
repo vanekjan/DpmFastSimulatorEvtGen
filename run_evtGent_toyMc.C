@@ -1,14 +1,40 @@
 void run_evtGent_toyMc(int nEvents = 1e3)
 {
 
-  gROOT->ProcessLine(".L bfc.C");
-  {
-    TString simple = "y2014 geant gstar usexgeom agml ";
-    bfc(0, simple );
-  }
+  //gROOT->ProcessLine(".L bfc.C");
+  /*  {
+      TString simple = "y2014 geant gstar usexgeom agml ";
+      bfc(0, simple );
+      }
+      */
+  //delete chain;
 
-  gROOT->LoadMacro("$STAR/StRoot/StMuDSTMaker/COMMON/macros/loadSharedLibraries.C");
-  loadSharedLibraries();
+  // gROOT->LoadMacro("$STAR/StRoot/StMuDSTMaker/COMMON/macros/loadSharedLibraries.C");
+  // loadSharedLibraries();
+
+  gSystem->Load("libStTableUtilities.so");
+  gSystem->Load("libTable");
+  gSystem->Load("libPhysics");
+  gSystem->Load("St_base");
+  gSystem->Load("StChain");
+  gSystem->Load("St_Tables");
+  gSystem->Load("StUtilities");        // new addition 22jul99
+  //gSystem->Load("StTreeMaker");
+  //gSystem->Load("StIOMaker");
+  // gSystem->Load("StarClassLibrary");
+  //gSystem->Load("StTriggerDataMaker"); // new starting from April 2003
+  //gSystem->Load("StBichsel");
+  //gSystem->Load("StEvent");
+  //gSystem->Load("StEventUtilities");
+  //gSystem->Load("StDbLib");
+  //gSystem->Load("StEmcUtil");
+  //gSystem->Load("StTofUtil");
+  //gSystem->Load("StPmdUtil");
+  //gSystem->Load("StPreEclMaker");
+  //gSystem->Load("StStrangeMuDstMaker");
+  //gSystem->Load("StMuDSTMaker");
+  //
+
 
   gSystem->Load( "libVMC.so" );
   gSystem->Load( "libSt_g2t.so" );
@@ -16,10 +42,10 @@ void run_evtGent_toyMc(int nEvents = 1e3)
   gSystem->Load( "StarGeneratorUtil.so" );
   gSystem->Load( "StarGeneratorEvent.so" );
   gSystem->Load( "StarGeneratorBase.so" );
-  gSystem->Load( "libMathMore.so"   );  
-  gSystem->Load( "libHijing1_383.so");
-  gSystem->Load( "libKinematics.so");
-  gSystem->Load( "xgeometry.so"     );
+  // gSystem->Load( "libMathMore.so"   );  
+  //gSystem->Load( "libHijing1_383.so");
+  //gSystem->Load( "libKinematics.so");
+  //gSystem->Load( "xgeometry.so"     );
 
   gSystem->Load("libHepMC2_06_09.so");
   gSystem->Load("libPythia8_1_86.so");
@@ -32,6 +58,19 @@ void run_evtGent_toyMc(int nEvents = 1e3)
   //gInterpreter->AddIncludePath("/common/star/star64/packages/SL16k/StRoot/StarGenerator/HepMC2_06_09"); //probably just for PDSF
 
   //cout<<"Processing evtGen_toyMc with..."<<endl;
+  //
+  //StChain *chain;
+  //chain = new StChain();
+  //
+  StChain chain("myChain");
 
-  gROOT->ProcessLine(Form(".x evtGen_toyMc.C+(%i)",nEvents));
+  gROOT->ProcessLine(Form(".x evtGen_toyMc.C+(%i , %i, %i)",nEvents, 0, 40)); // added possibility to set a custom centrality range
+
+  //chain->Finish();
+  chain.Finish();
+  //delete chain;
+  //
+
+
+  return;
 }
