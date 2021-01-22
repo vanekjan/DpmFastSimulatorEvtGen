@@ -8,13 +8,15 @@
 // /star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/2018-07-31_13-54_EvtGen_final/merge/output.root //physics stream
 // /star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/2019-03-21_04-15_EvtGen_new_pT_resolution_test/merge/output.root
 
+// /star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/2019-09-10_12-37/merge/output.root //physics stream - new (corrected Delta_max)
+
 // /star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/2019-08-10_12-26/merge //sst+nosst streams
 //
 //
 // /star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/2019-08-22_05-58/merge/output.root //real p_T 02 (high p_T)
 
-void run_nt_TMVA_Cuts(TString infile = "/star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/2018-07-31_13-54_EvtGen_final/merge/output.root", 
-                      TString outfile = "/star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/Histo_output/TMVA/physics/Dpm.out_eff_new_11_pT_bins_TMVA_ana_cuts_physics_weight_rPt_rapidity_cut_no_vz_cut_new.toyMc.root") 
+void run_nt_TMVA_Cuts(TString infile = "/star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/2019-09-12_20-26/merge/output.root", 
+                      TString outfile = "/star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/Histo_output/TMVA/physics/Dpm.out_eff_new_11_pT_bins_TMVA_ana_cuts_physics_rPt_decL_upCut_y_test.toyMc.root") 
   { //for output from submit
 //void run_nt(TString infile = "Dpm.toyMc.root", TString outfile = "Dpm.out_ana_cuts.toyMc.root") { //for output from local test
   std::cout << "start " << std::endl;

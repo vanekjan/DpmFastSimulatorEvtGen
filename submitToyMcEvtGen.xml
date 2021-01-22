@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<job nProcesses="8" copyInputLocally="false" simulateSubmission="false">
+<job nProcesses="100" simulateSubmission="false">
 
         <stdout URL="file:./jobs/log/&productionId;/$JOBID.log" />
         <stderr URL="file:./jobs/err/&productionId;/$JOBID.err" />
@@ -10,19 +10,14 @@
           <ListLocation>./jobs/list/</ListLocation>
         </Generator>
                                                 
-	<ResourceUsage>
-		<Memory>
-			<MinMemory>2900</MinMemory>
-		</Memory>
-	</ResourceUsage>
 
 <command>
-starver DEV
+starver SL19e
 
-root4star -b -l -q run_evtGent_toyMc.C\(1e6\)
+root4star -b -l -q run_evtGent_toyMc.C\(1e5\)
 mv Dpm.toyMc.root Dpm.$JOBID.toyMc.root
-chgrp rhstar *.root
-chmod g+rw *.root
+
+
 </command>
 
 <output fromScratch="*.toyMc.root" toURL="/gpfs01/star/pwg/vanekjan/myDpmEvtGenFastSim/myOutput/&productionId;/"/>
