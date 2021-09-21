@@ -175,8 +175,8 @@ TH1D* hTpcKMinus[nCentHftRatio];
 
 string outFileName = "Dpm.toyMc.root"; //default output file name (do not change - see submit XML)
 
-//std::pair<float, float> const momentumRange(0, 11); //momentum range
-std::pair<float, float> const momentumRange(0, 3); //for low-pT to increase statistics
+std::pair<float, float> const momentumRange(0, 11); //momentum range
+//std::pair<float, float> const momentumRange(0, 3); //for low-pT to increase statistics
 
 float const gVzCut = 6.0e4;
 float const acceptanceRapidity = 1.0;
@@ -831,8 +831,8 @@ void bookObjects(int centLow, int centUp)
   //for (int ii = 0; ii < nCentHftRatio; ++ii)
   for(int ii = centrality9_low; ii < centrality9_up; ii++)
   {
-    //h1Vz[ii] = (TH1D*)(fVertex.Get(Form("mh1VzWg_%i", ii)));
-    h1Vz[ii] = (TH1D*)(fVertex.Get(Form("mh1Vz_%i", ii)));
+    h1Vz[ii] = (TH1D*)(fVertex.Get(Form("mh1VzWg_%i", ii)));
+    //h1Vz[ii] = (TH1D*)(fVertex.Get(Form("mh1Vz_%i", ii)));
     h1Vz[ii]->SetDirectory(0);
   }
 
@@ -841,8 +841,8 @@ void bookObjects(int centLow, int centUp)
   cout << "Loading input HFT ratios and DCA ..." << endl;
 
 
-  TFile *fHftRatio1 = new TFile("./input/HFT_Ratio_VsPt_Centrality_Eta_Phi_Vz_Zdcx_1Sigma_DCA_cuts_binom_err.root", "read"); //strict nSigma cuts (1Sigma)
-  TFile fDca1("./input/2DProjection_simCent_NoBinWidth_3D_Dca_VsPt_Centrality_Eta_Phi_Vz_Zdcx_1Sigma_DCA_cuts.root");
+  TFile *fHftRatio1 = new TFile("./input/HFT_Ratio_VsPt_Centrality_Eta_Phi_Vz_Zdcx_1Sigma_DCA_cuts_binom_err.root", "read"); //old file names - rename input accordingly
+  TFile *fDca1 = new TFile("./input/2DProjection_simCent_NoBinWidth_3D_Dca_VsPt_Centrality_Eta_Phi_Vz_Zdcx_1Sigma_DCA_cuts.root", "read");
 
   //cout<<"test"<<endl;
 
@@ -879,7 +879,7 @@ void bookObjects(int centLow, int centUp)
           // for (int iPhi = 0; iPhi < nPhisDca; ++iPhi)
           for (int iPt = 0; iPt < nPtBinsDca; ++iPt)
           {
-            h2Dca[iParticle][iEta][iVz][iCent][iPt] = (TH2D*)((fDca1.Get(Form("mh2DcaPtCentPartEtaVzPhi_%i_%i_%i_%i_%i", iParticle, iEta, iVz, iCent, iPt))));
+            h2Dca[iParticle][iEta][iVz][iCent][iPt] = (TH2D*)((fDca1->Get(Form("mh2DcaPtCentPartEtaVzPhi_%i_%i_%i_%i_%i", iParticle, iEta, iVz, iCent, iPt))));
             h2Dca[iParticle][iEta][iVz][iCent][iPt]->SetDirectory(0);
           }
         }
@@ -914,7 +914,7 @@ void bookObjects(int centLow, int centUp)
     fHftRatioCorrect->Close();
 
   fHftRatio1->Close();
-  fDca1.Close();
+  fDca1->Close();
 
   cout << " Loading TPC tracking efficiencies " << endl;
 
