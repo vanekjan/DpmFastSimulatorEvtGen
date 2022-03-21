@@ -175,13 +175,15 @@ void nt_TMVA_Cuts::Loop()
       }
       if(ReadMode == 2)
       {
-        filename << "./TMVA_cuts/005_new_training_2020/loose/30_percent/cuts_loose_cent_" << j << ".txt";
+        //filename << "./TMVA_cuts/005_new_training_2020/loose/30_percent/cuts_loose_cent_" << j << ".txt";
+        filename << "./TMVA_cuts/005_new_training_2020/loose/50_percent/cuts_loose_cent_" << j << ".txt";
         //filename << "./TMVA_cuts/006_new_training_2020_Delta_max/loose/30_percent/cuts_loose_cent_" << j << ".txt";
 
       }
       if(ReadMode == 3)
       {
-        filename << "./TMVA_cuts/005_new_training_2020/tight/30_percent/cuts_tight_cent_" << j << ".txt";
+        //filename << "./TMVA_cuts/005_new_training_2020/tight/30_percent/cuts_tight_cent_" << j << ".txt";
+        filename << "./TMVA_cuts/005_new_training_2020/tight/50_percent/cuts_tight_cent_" << j << ".txt";
         //filename << "./TMVA_cuts/006_new_training_2020_Delta_max/tight/30_percent/cuts_tight_cent_" << j << ".txt";
 
       }
@@ -282,6 +284,9 @@ void nt_TMVA_Cuts::Loop()
 
     //if( fabs(kRDcaXYtoSV) > 300 || fabs(p1RDcaXYtoSV) > 300 || fabs(p2RDcaXYtoSV) > 300 ) continue;
     //if( fabs(kRDcaZtoSV) > 300 || fabs(p1RDcaZtoSV) > 300 || fabs(p2RDcaZtoSV) > 300 ) continue;
+    //
+
+    if(pTspectrum == 1) w = 1; //pTspectrum == 1 -> Levy input pt spectrum - already realistic, no need to use weights
 
 
     if(cent > -0.5 and cent < 0.5) h_dpm_pt[0]->Fill(rPt,w);

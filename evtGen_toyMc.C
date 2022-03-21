@@ -196,7 +196,7 @@ TH1D* h_k_tof_eff;
 void initEvtGen();
 void decayAndFill(TString name, TLorentzVector* b, double const weight, TClonesArray& daughters); //Decay particle - name
 void decayAndFill(int PDG_id, TLorentzVector* b, double const weight, TClonesArray& daughters, int centLow, int centUp); //Decay particle - PDG ID
-void getKinematics(TLorentzVector& b, double const mass);
+void getKinematics(TLorentzVector& b, double const mass, const int pTspectrum);
 void bookObjects(int centLow, int centUp);
 void write();
 
@@ -204,7 +204,7 @@ void write();
 StarEvtGenDecayer* starEvtGenDecayer = NULL;
 
 //============== main  program ==================
-void evtGen_toyMc(int npart = 1000, int centLow = 0, int centUp = 80) //centrality range in %, default range is 0% to 80% 
+void evtGen_toyMc(int npart = 1000, int centLow = 0, int centUp = 80, int pTspectrum = 1) //centrality range in %, default range is 0% to 80%, pTspectrum = 0 - flat pT, 1 - Levy (weight function)
 {
   cout<<"Starting EvtGen"<<endl;
   initEvtGen();
@@ -254,8 +254,8 @@ void evtGen_toyMc(int npart = 1000, int centLow = 0, int centUp = 80) //centrali
     TLorentzVector* b_d = new TLorentzVector;
     TLorentzVector* b_d2 = new TLorentzVector;
 
-    getKinematics(*b_d, M_D_PLUS);//D+ (PDG - 411) - generates kinematics of D+
-    getKinematics(*b_d2, M_D_PLUS);//D+ (PDG - 411) - generates kinematics of D-
+    getKinematics(*b_d, M_D_PLUS, pTspectrum);//D+ (PDG - 411) - generates kinematics of D+
+    getKinematics(*b_d2, M_D_PLUS, pTspectrum);//D+ (PDG - 411) - generates kinematics of D-
 
     decayAndFill(411, b_d, fWeightFunction->Eval(b_d->Perp()), ptl, centLow, centUp);//D+
     decayAndFill(-411, b_d2, fWeightFunction->Eval(b_d2->Perp()), ptl, centLow, centUp);//D-
@@ -266,7 +266,7 @@ void evtGen_toyMc(int npart = 1000, int centLow = 0, int centUp = 80) //centrali
     //{
     //result->Delete(Form("nt%i;*", iteration-1 )); //delete nt from previous write asociated with the file from memory
     // result = new TFile(outFileName.c_str(), "update");
-    //result->cd();
+    //result->cd()nematics;
 
     // nt->SetDirectory(gDirectory->GetDirectory());
     //}
@@ -737,10 +737,11 @@ void fill(int const kf, TLorentzVector* b, double weight, TLorentzVector const& 
 }
 
 
-void getKinematics(TLorentzVector& b, double const mass)
+void getKinematics(TLorentzVector& b, double const mass, const int pTspectrum)
 {
-  float const pt = gRandom->Uniform(momentumRange.first, momentumRange.second); //flat pT distribution
-  //float const pt = fWeightFunction->GetRandom(momentumRange.first, momentumRange.second); //realistic pT distribution
+  float pt = 0;
+  if(pTspectrum == 0) pt = gRandom->Uniform(momentumRange.first, momentumRange.second); //flat pT distribution
+  if(pTspectrum == 1) pt = fWeightFunction->GetRandom(momentumRange.first, momentumRange.second); //realistic pT distribution
   //float const pt = InvEffWeight->GetRandom(momentumRange.first, momentumRange.second);
   float const y = gRandom->Uniform(-acceptanceRapidity, acceptanceRapidity);
   float const phi = TMath::TwoPi() * gRandom->Rndm();

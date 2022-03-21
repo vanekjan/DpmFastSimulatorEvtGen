@@ -64,7 +64,7 @@ void run_evtGent_toyMc(int nEvents = 1e3)
   //
   StChain chain("myChain");
 
-  gROOT->ProcessLine(Form(".x evtGen_toyMc.C+(%i , %i, %i)",nEvents, 40, 80)); // added possibility to set a custom centrality range
+  gROOT->ProcessLine(Form(".x evtGen_toyMc.C+(%i , %i, %i, %i)",nEvents, 40, 80, 1)); // added possibility to set a custom centrality range and shape of input pT spectrum (0 - flat, 1 - Levy)
 
   //chain->Finish();
   chain.Finish();

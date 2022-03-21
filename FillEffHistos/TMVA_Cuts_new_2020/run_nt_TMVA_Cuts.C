@@ -22,12 +22,15 @@
 //
 // 2020-05-12_03-58_new_inputs_from_data_full_stat_physics/
 //
-// 2021-09-15_04-29_physics_new_inputs_Vz_weight/
+// 2021-11-09_11-01_physics_new_inputs_Vz_weight_new_embedd/
+// 2021-11-15_03-02_physics_new_inputs_Vz_weight_new_embedd_Levy_pT/
+// 2021-11-10_04-28_physics_Chuan_HFT/
 //
 // 2021-09-15_05-36_sst_new_inputs_Vz_weight/
+// 2021-10-22_09-44_sst_new_inputs_Vz_weight_Levy_pT/
 
-void run_nt_TMVA_Cuts(TString infile = "/star/u/vanekjan/pwg/vanekjan/myDpmEvtGenFastSim/myOutput/2021-09-15_04-29_physics_new_inputs_Vz_weight/merge/output.root", 
-                      TString outfile = "/star/u/vanekjan/pwg/vanekjan/myDpmEvtGenFastSim/myOutput/Histo_output/TMVA/physics/TMVA_cuts_2020/Delta_max_cut_250/Dpm.out_eff_new_11_pT_bins_TMVA_ana_cuts_physics_new_prod_no_decL_up_cut_DCA_up_cut_loose_Delta_max_Vz_refmult_weight_new_hist.toyMc.root") 
+void run_nt_TMVA_Cuts(TString infile = "/star/u/vanekjan/pwg/vanekjan/myDpmEvtGenFastSim/myOutput/2021-11-09_11-01_physics_new_inputs_Vz_weight_new_embedd/merge/output.root", 
+                      TString outfile = "/star/u/vanekjan/pwg/vanekjan/myDpmEvtGenFastSim/myOutput/Histo_output/TMVA/physics/TMVA_cuts_2020/Delta_max_cut_250/Dpm.out_eff_new_11_pT_bins_TMVA_loose_cuts_50_physics_new_inputs_Vz_weight_new_embedd.toyMc.root") 
   {
   std::cout << "start " << std::endl;
 	gROOT->ProcessLine(".L nt_TMVA_Cuts.C++");
@@ -49,7 +52,9 @@ void run_nt_TMVA_Cuts(TString infile = "/star/u/vanekjan/pwg/vanekjan/myDpmEvtGe
 //  n.Set_con_kRPt(0.5);
 //  n.Set_con_pRPt(0.5);
 
-  n.Set_ReadMode(1);//ReadMode = 0 - pre-cuts, ReadMode = 1 - TMVA analysis cuts, ReadMode = 2 - TMVA loose cuts, ReadMode = 3 - TMVA tight cuts, ReadMode = 4 - old topo. cuts
+  n.Set_ReadMode(2);//ReadMode = 0 - pre-cuts, ReadMode = 1 - TMVA analysis cuts, ReadMode = 2 - TMVA loose cuts, ReadMode = 3 - TMVA tight cuts, ReadMode = 4 - old topo. cuts
+  n.Set_pTspectrum(0);// pTspectrum = 0 - flat input pT spectrum (use weights), 1 - Levy input spectrum (do not use weights - already realistic pT shape)
+
 
   //set topological cuts in tmvaCuts.h
 	//_____________________________________________________________________________

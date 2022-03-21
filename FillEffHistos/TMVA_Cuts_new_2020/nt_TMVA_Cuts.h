@@ -283,6 +283,7 @@ class nt_TMVA_Cuts {
     float con_dV0Max;
 
     int ReadMode; //ReadMode: 0 - pre-cuts, 1 - analysis cust
+    int pTspectrum; //pTspectrum: 0 - flat (use weights when fillign histos), 1 - Levy (don't use weights - input spectrum realistic)
 
 
     nt_TMVA_Cuts(TTree *tree=0);
@@ -315,6 +316,7 @@ class nt_TMVA_Cuts {
 
     //set ReadMode
     virtual void Set_ReadMode(int Mode) {ReadMode = Mode;};
+    virtual void Set_pTspectrum(int spectrum) {pTspectrum = spectrum;};
 };
 
 #endif
