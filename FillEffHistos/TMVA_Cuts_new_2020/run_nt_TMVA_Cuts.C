@@ -1,30 +1,9 @@
 #include <TString.h>
-//#include <TFile.h>
-//#include <TTree.h>
-//#include "nt.h"
-//#include <iostream>
-//#include"TROOT.h"
 
-// /star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/2018-07-31_13-54_EvtGen_final/merge/output.root //physics stream
-// /star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/2019-03-21_04-15_EvtGen_new_pT_resolution_test/merge/output.root
+// folders with output from fast-sim
 
-// /star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/2019-09-10_12-37/merge/output.root //physics stream - new (corrected Delta_max)
-
-// /star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/2019-08-10_12-26/merge //sst+nosst streams
-//
-//
-// /star/u/vanekjan/500GBStorage/vanekjan/myDpmEvtGenFastSim/myOutput/2019-08-22_05-58/merge/output.root //real p_T 02 (high p_T)
-//
-// 2019-10-17_10-15_new_DCAxy //new Run16 DCAxy distributions
-//
-//
-// 2020-05-12_04-44_new_inputs_from_data_full_stat_sst_nosst/
-//
-// 2020-05-12_03-58_new_inputs_from_data_full_stat_physics/
-//
 // 2021-11-09_11-01_physics_new_inputs_Vz_weight_new_embedd/
 // 2021-11-15_03-02_physics_new_inputs_Vz_weight_new_embedd_Levy_pT/
-// 2021-11-10_04-28_physics_Chuan_HFT/
 //
 // 2021-09-15_05-36_sst_new_inputs_Vz_weight/
 // 2021-10-22_09-44_sst_new_inputs_Vz_weight_Levy_pT/
@@ -34,12 +13,12 @@ void run_nt_TMVA_Cuts(TString infile = "/star/u/vanekjan/pwg/vanekjan/myDpmEvtGe
   {
   std::cout << "start " << std::endl;
 	gROOT->ProcessLine(".L nt_TMVA_Cuts.C++");
-	//gROOT->ProcessLine(".L nt.C");
+
 	TFile *f_input = new TFile(infile, "open");
 	TTree *tree_nt = (TTree*)f_input->Get("nt");
 	nt_TMVA_Cuts n(tree_nt);
 	n.Set_out_file_name(outfile);
-	//n.Set_con_cent(8);
+
 	n.Set_con_cent_up(9);
 	n.Set_con_cent_down(-1);
 	n.Set_con_v0z(60000.);

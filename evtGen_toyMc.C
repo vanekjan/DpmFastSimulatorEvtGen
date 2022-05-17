@@ -17,12 +17,10 @@
 #include <fstream>
 
 #include "TFile.h"
-//#include "TSystem.h"
 #include "TH1F.h"
 #include "TH1D.h"
 #include "TH2D.h"
 #include "TH3F.h"
-//#include "TGraph.h"
 #include "TNtuple.h"
 #include "TMath.h"
 #include "TF1.h"
@@ -35,12 +33,8 @@
 #include "TVector3.h"
 #include "phys_constants.h"
 #include "SystemOfUnits.h"
-//#include "TStopwatch.h"
 #include "TParticlePDG.h"
-//#include "TDatabasePDG.h"
-//#include "TDirectory.h"
 
-//#include "TTimer.h"
 #include "EvtGen/EvtGen.hh"
 #include "EvtGenBase/EvtParticle.hh"
 #include "EvtGenBase/EvtParticleFactory.hh"
@@ -63,10 +57,8 @@ using namespace std;
 
 //----------------------FROM PYTHIA FAST-SIM-------------------------------------------------------------------------------
 
-//void setDecayChannels(int const mdme); //check that this works
-//void decayAndFill(int const kf, TLorentzVector* b, double const weight, TClonesArray& daughters);
 void fill(int const kf, TLorentzVector* b, double weight, TLorentzVector const& kMom, TLorentzVector const& p1Mom, TLorentzVector const& p2Mom, TVector3 v00, int centLow, int centUp);
-//void getKinematics(TLorentzVector& b, double const mass);
+
 TLorentzVector smearMom(TLorentzVector const& b, TF1 const * const fMomResolution);
 TVector3 smearPos(TLorentzVector const& mom, TLorentzVector const& rMom, TVector3 const& pos);
 TVector3 smearPosData(int iParticleIndex, double vz, int cent, TLorentzVector const& rMom, TVector3 const& pos);
@@ -80,9 +72,7 @@ float dca1To2_helix(TVector3 const& p1, TVector3 const& pos1, float charge1, TVe
 TVector3 getVertex(int centrality);
 bool matchHft(int iParticleIndex, double vz, int cent, TLorentzVector const& mom);
 bool tpcReconstructed(int iParticleIndex, float charge, int cent, TLorentzVector const& mom);
-bool matchTOF(int const iParticleIndex, TLorentzVector const& mom);
-//void bookObjects();
-//void write();
+
 int getPtIndexDca(double);
 int getEtaIndexDca(double);
 int getVzIndexDca(double);
@@ -155,7 +145,6 @@ const Double_t ptEdgeDca[nPtBinsDca + 1] =
   0.3, 0.4, 0.5,
   0.6,  0.7 , 0.8 , 0.9 ,
   1. , 1.25 , 1.5 , 1.75 , 2.  , 2.25 , 2.5 , 2.75 , 3.0 , 3.5,
-  // 3. , 3.5 , 4.  , 4.5 , 5. , 6. , 8.0 , 10. , 12.0
   4.  , 6. , 12.0
 };
 
@@ -184,14 +173,9 @@ float const sigmaPos0 = 15.2;
 float const pxlLayer1Thickness = 0.00486;
 float const sigmaVertexCent[nCentHftRatio] = {31., 18.1, 12.8, 9.3, 7.2, 5.9, 5., 4.6, 4.};
 
-//TF1* fPionTofEff= NULL;
-//TF1* fKaonTofEff= NULL;
 TH1D* h_pi_tof_eff;
 TH1D* h_k_tof_eff;
-
-
 //-------------------------------------------------------------------------------------------------------------------------
-
 
 void initEvtGen();
 void decayAndFill(TString name, TLorentzVector* b, double const weight, TClonesArray& daughters); //Decay particle - name
@@ -200,51 +184,22 @@ void getKinematics(TLorentzVector& b, double const mass, const int pTspectrum);
 void bookObjects(int centLow, int centUp);
 void write();
 
-// TPythia6Decayer* pydecay;
 StarEvtGenDecayer* starEvtGenDecayer = NULL;
 
 //============== main  program ==================
-void evtGen_toyMc(int npart = 1000, int centLow = 0, int centUp = 80, int pTspectrum = 1) //centrality range in %, default range is 0% to 80%, pTspectrum = 0 - flat pT, 1 - Levy (weight function)
+
+//centrality range in %, default range is 0% to 80%, pTspectrum = 0 - flat pT, 1 - Levy (weight function)
+//specifically set in run_evtGent_toyMc.C
+void evtGen_toyMc(int npart = 1000, int centLow = 0, int centUp = 80, int pTspectrum = 0) 
 {
   cout<<"Starting EvtGen"<<endl;
   initEvtGen();
   cout<<"initEvtGen() done..."<<endl;
-  //TStopwatch*   stopWatch = new TStopwatch();
-  //stopWatch->Start();
+
   gRandom->SetSeed();
   bookObjects(centLow, centUp);
 
-
-  /*//used just for testing-----------------------------------------------------------------------------------
-    result = new TFile(outFileName.c_str(), "recreate");
-    int BufSize = (int)pow(2., 16.);
-    nt = new TNtuple("nt", "", "cent:vx:vy:vz:vzIdx:"
-    "pid:w:m:pt:eta:y:phi:v0x:v0y:v0z:" // MC Dpm
-    "rM:rPt:rEta:rY:rPhi:rV0x:rV0y:rV0z:" // Rc Dpm
-    "dcaDaughters:dcaDaughters_helix:decayLength:decayLength_helix:MCdecayLength:dcaDpmToPv:dcaDpmToPv_helix:cosTheta:cosTheta_helix:" // Rc pair
-    "kM:kPt:kEta:kY:kPhi:kDca:" // MC Kaon
-    "kRM:kRPt:kREta:kRY:kRPhi:kRVx:kRVy:kRVz:kRDca:kRDca_helix:kTpc:" // Rc Kaon
-    "p1M:p1Pt:p1Eta:p1Y:p1Phi:p1Dca:" // MC Pion1
-    "p1RM:p1RPt:p1REta:p1RY:p1RPhi:p1RVx:p1RVy:p1RVz:p1RDca:p1RDca_helix:p1Tpc:" // Rc Pion1
-    "p2M:p2Pt:p2Eta:p2Y:p2Phi:p2Dca:" // MC Pion2
-    "p2RM:p2RPt:p2REta:p2RY:p2RPhi:p2RVx:p2RVy:p2RVz:p2RDca:p2RDca_helix:p2Tpc:" // Rc Pion2
-    "kHft:p1Hft:p2Hft:mdV0Max:mdV0Max_helix", BufSize);
-
-*/
-  //______________________________________________________________________________________________________________________
-  //ProcInfo_t ProcesInfo;
-
-  /*
-     TString name="Lambda(1520)0";
-     TDatabasePDG::Instance()->AddParticle(name, "B038", 1.5195, kFALSE, 1.56e-02, 0., "Baryon", 3124); //add lambda(1520) to PDG database under code 3124
-     */
-
-  //Double_t DPlusMass = TDatabasePDG::Instance()->GetParticle(411)->Mass();
-
-  //TLorentzVector* b_d = new TLorentzVector;
   TClonesArray ptl("TParticle", 10); //array of 10 TParticles
-
-  //int iteration = 1; //first iteration for write in loop
 
   for (int ipart = 0; ipart < npart; ipart++)
   {
@@ -259,59 +214,21 @@ void evtGen_toyMc(int npart = 1000, int centLow = 0, int centUp = 80, int pTspec
 
     decayAndFill(411, b_d, fWeightFunction->Eval(b_d->Perp()), ptl, centLow, centUp);//D+
     decayAndFill(-411, b_d2, fWeightFunction->Eval(b_d2->Perp()), ptl, centLow, centUp);//D-
-    /*   
-         if(!(ipart % 1000) && ipart > 0 ) //save ntuple every preset numer of decays 
-         {
-    //if(iteration > 1)
-    //{
-    //result->Delete(Form("nt%i;*", iteration-1 )); //delete nt from previous write asociated with the file from memory
-    // result = new TFile(outFileName.c_str(), "update");
-    //result->cd()nematics;
 
-    // nt->SetDirectory(gDirectory->GetDirectory());
-    //}
-
-    //nt->Write(Form("nt%i", iteration )); //write to file
-    //nt->Reset(); //reset nTUple - to empty memory
-    //nt->SetDirectory(0);
-
-
-    //recquires TSystem.h - see top
-    gSystem->GetProcInfo(&ProcesInfo);
-    cout<<"Memory usage: "<<ProcesInfo.fMemResident<<endl;
-
-    //result->Close();
-
-    //iteration++; 
-    }
-    */
   }
 
-  //if(iteration > 1)
-  //{
-  // result = new TFile(outFileName.c_str(), "update");
-  // result->cd();
-  //}
 
   cout<<"Write!"<<endl;
   write();
   cout<<"Written!"<<endl;
 
 
-  //stopWatch->Stop();
-  //stopWatch->Print();
 
   return;
 
 }
-/*
-   void setDecayChannels(int const mdme) //from pythia_FastSim, check that this works
-   {
-   for (int idc = decayChannels.first; idc < decayChannels.second + 1; idc++) TPythia6::Instance()->SetMDME(idc, 1, 0);
-   TPythia6::Instance()->SetMDME(mdme, 1, 1);
-   }
-   */
 
+//not used in this version of fast-sim, see the next decayAndFill(...)
 void decayAndFill(TString name, TLorentzVector* b, double const weight, TClonesArray& daughters)//decay for lambda(1520)
 {
   TLorentzVector kMom;
@@ -330,6 +247,7 @@ void decayAndFill(TString name, TLorentzVector* b, double const weight, TClonesA
 
   int nTrk = daughters.GetEntriesFast(); //get number of generated tracks (all daughters)
   cout << "nTrk = " << nTrk << endl;
+
   for (int iTrk = 0; iTrk < nTrk; ++iTrk) //go through all tracks
   {
     TParticle* ptl0 = (TParticle*)daughters.At(iTrk);
@@ -352,7 +270,7 @@ void decayAndFill(TString name, TLorentzVector* b, double const weight, TClonesA
       ptl0->Momentum(pMom);
     }
   }
-  // cout << "end of Tracks" << endl << endl;
+
   daughters.Clear();
 
   //fill(kf, b, weight, kMom, p1Mom, p2Mom, v00);
@@ -361,36 +279,10 @@ void decayAndFill(TString name, TLorentzVector* b, double const weight, TClonesA
 
 void decayAndFill(int PDG_id, TLorentzVector* b, double const weight, TClonesArray& daughters, int centLow, int centUp)//decay for D+
 {
-  //TLorentzVector ElectronMomentum;
 
   starEvtGenDecayer->Decay(PDG_id, b); //Decay particle
 
   starEvtGenDecayer->ImportParticles(&daughters); //get daughters from decay
-
-  //add cut on MCdecayLength here (use while?)
-
-  /*
-     TVector3 MCdecLength;
-     MCdecLength.SetXYZ(0,0,0); //set default value
-
-     while( MCdecLength.Mag() < MCdecLengthCut ) //set cut in run macro
-     {
-     starEvtGenDecayer->Decay(PDG_id, b); //Decay particle
-
-     starEvtGenDecayer->ImportParticles(&daughters); //get daughters from decay
-
-     TParticle* testParticle = (TParticle*)daughters.At(0); //take first daughter particle
-
-     MCdecLength.SetXYZ(testParticle->Vx() * 1000., testParticle->Vy() * 1000., testParticle->Vz() * 1000.); //find secondary vertex
-
-     if(MCdecLength.Mag() < MCdecLengthCut)
-     {
-     daughters.Clear(); //clear daugters if the MC decay length is smaller than cut
-     }
-     }
-
-
-*/
 
   TLorentzVector kMom;
   TLorentzVector p1Mom;
@@ -402,18 +294,13 @@ void decayAndFill(int PDG_id, TLorentzVector* b, double const weight, TClonesArr
   {
     TParticle* ptl0 = (TParticle*)daughters.At(iTrk);
 
-    //cout << "iTrk = " << iTrk << " , " << ptl0->GetPdgCode() << endl;
-
     switch (abs(ptl0->GetPdgCode()))
     {
       case 321:
         ptl0->Momentum(kMom);
-        // v00.SetXYZ(0,0,0);
         v00.SetXYZ(ptl0->Vx() * 1000., ptl0->Vy() * 1000., ptl0->Vz() * 1000.); // converted to μm
-        //if (ptl0->Momentum(kMom).mag() < 0.15) return;
         break;
       case 211:
-        //if (ptl0->Momentum(kMom).mag() < 0.15) return;
         if (!p1Mom.P()) ptl0->Momentum(p1Mom);
         else ptl0->Momentum(p2Mom);
         break;
@@ -421,23 +308,15 @@ void decayAndFill(int PDG_id, TLorentzVector* b, double const weight, TClonesArr
         break;
     }
   }
-  //cout<<"check point here D"<<endl;
+
   daughters.Clear();
 
-  //cout<<"check point here E"<<endl;
-
   fill(PDG_id, b, weight, kMom, p1Mom, p2Mom, v00, centLow, centUp);
-
-  //cout<<"check point here F"<<endl;
 
 }
 
 void fill(int const kf, TLorentzVector* b, double weight, TLorentzVector const& kMom, TLorentzVector const& p1Mom, TLorentzVector const& p2Mom, TVector3 v00, int centLow, int centUp)
 {
-
-  //int const centDef[nCentHftRatio+1] = {80, 70, 60, 50, 40, 30, 20, 10, 5, 0}; //centrality definition in % - now defined as global
-
-  //int const centrality_rndm = gRandom->Uniform(0, 80); //generate random centrality in % - original version
   int const centrality_rndm = gRandom->Uniform(centLow, centUp); //generate random centrality in % - new version with possibility to set any centrality range
 
   int centrality = -1; //defaul value
@@ -453,11 +332,6 @@ void fill(int const kf, TLorentzVector* b, double weight, TLorentzVector const& 
   float const MCdecayLength = v00.Mag(); //generated decay length, from generator, before smearing
 
   TVector3 const vertex = getVertex(centrality);
-  // smear primary vertex
-  //  float const sigmaVertex = sigmaVertexCent[centrality];
-  //  TVector3 vertex(gRandom->Gaus(0, sigmaVertex), gRandom->Gaus(0, sigmaVertex), gRandom->Gaus(0, sigmaVertex) );
-
-  //vertex += vertex_z; //shift smeared primary vertex along the beam by v_z
 
   v00 += vertex; //shift MC secondary vertex along the beam by v_z
 
@@ -484,20 +358,17 @@ void fill(int const kf, TLorentzVector* b, double weight, TLorentzVector const& 
   TVector3 const kRPos  = smearPosData(1, vertex.z(), centrality, kRMom,  v00);
   TVector3 const p1RPos = smearPosData(0, vertex.z(), centrality, p1RMom, v00);
   TVector3 const p2RPos = smearPosData(0, vertex.z(), centrality, p2RMom, v00);
-  // TVector3 const kRPos = smearPos(kMom, kRMom, v00);
-  // TVector3 const p1RPos = smearPos(p1Mom, p1RMom, v00);
-  // TVector3 const p2RPos = smearPos(p2Mom, p1RMom, v00);
+
 
   // reconstruct
   int const charge = kf > 0 ? 1 : -1;
-
 
   TLorentzVector const rMom = kRMom + p1RMom + p2RMom;
   float const kDca = dca(kMom.Vect(), v00, vertex);
   float const p1Dca = dca(p1Mom.Vect(), v00, vertex);
   float const p2Dca = dca(p2Mom.Vect(), v00, vertex);
+
   float const kRDca = dca(kRMom.Vect(), kRPos, vertex);
-  //float const kRDcaToSV = dca(kRMom.Vect(), kRPos, v00); //DCA to secondary vertex
   float const kRDca_helix = dcaHelix(kRMom.Vect(), kRPos, vertex, -1*charge); //dca from helix, kaon has opposite charge than D meson
   float const kRSDca = dcaSigned(kRMom.Vect(), kRPos, vertex);
   float const kRDcaXY = dcaXY(kRMom.Vect(), kRPos, vertex);
@@ -506,7 +377,6 @@ void fill(int const kf, TLorentzVector* b, double weight, TLorentzVector const& 
   float const kRDcaZtoSV = dcaZ(kRMom.Vect(), kRPos, v00);
 
   float const p1RDca = dca(p1RMom.Vect(), p1RPos, vertex);
-  //float const p1RDcaToSV = dca(p1RMom.Vect(), p1RPos, v00);
   float const p1RDca_helix = dcaHelix(p1RMom.Vect(), p1RPos, vertex, charge); //dca from helix, pion has the same charge as D meson
   float const p1RSDca = dcaSigned(p1RMom.Vect(), p1RPos, vertex);
   float const p1RDcaXY = dcaXY(p1RMom.Vect(), p1RPos, vertex);
@@ -515,7 +385,6 @@ void fill(int const kf, TLorentzVector* b, double weight, TLorentzVector const& 
   float const p1RDcaZtoSV = dcaZ(p1RMom.Vect(), p1RPos, v00);
 
   float const p2RDca = dca(p2RMom.Vect(), p2RPos, vertex);
-  //float const p2RDcaToSV = dca(p2RMom.Vect(), p2RPos, v00);
   float const p2RDca_helix = dcaHelix(p2RMom.Vect(), p2RPos, vertex, charge); //dca from helix, pion has the same charge as D meson
   float const p2RSDca = dcaSigned(p2RMom.Vect(), p2RPos, vertex);
   float const p2RDcaXY = dcaXY(p2RMom.Vect(), p2RPos, vertex);
@@ -527,23 +396,23 @@ void fill(int const kf, TLorentzVector* b, double weight, TLorentzVector const& 
   float const dca12 = dca1To2(kRMom.Vect(), kRPos, p1RMom.Vect(), p1RPos, v12);
   float const dca23 = dca1To2(p1RMom.Vect(), p1RPos, p2RMom.Vect(), p2RPos, v23);
   float const dca31 = dca1To2(p2RMom.Vect(), p2RPos, kRMom.Vect(), kRPos, v31);
+
   float dcaDaughters = dca12 > dca31 ? dca12 : dca31;
   dcaDaughters = dcaDaughters > dca23 ? dcaDaughters : dca23;
   v0 = (v12 + v23 + v31) * 0.333333333;
+
   float const decayLength = (v0 - vertex).Mag();
   float const dcaDpmToPv = dca(rMom.Vect(), v0, vertex);
   float const cosTheta = (v0 - vertex).Unit().Dot(rMom.Vect().Unit());
   float const angle12 = kRMom.Vect().Angle(p1RMom.Vect());
 
   // Distance between v12 and v23
-  //float const v12 = (p1AtDcaToP2 + p2AtDcaToP1 - p2AtDcaToP3 - p3AtDcaToP2).mag()/2.0;
   float const v12_23 = (v12 - v23).Mag();
   // Distance between v23 and v31
-  //float const v23 = (p2AtDcaToP3 + p3AtDcaToP2 - p3AtDcaToP1 - p1AtDcaToP3).mag()/2.0;
   float const v23_31 = (v23 - v31).Mag();
   // Distance between v31 and v12
-  //float const v31 = (p3AtDcaToP1 + p1AtDcaToP3 - p1AtDcaToP2 - p2AtDcaToP1).mag()/2.0;
   float const v31_12 = (v31 - v12).Mag();
+
   //maximum dist between reo v0's to be averaging
   float const max12 =  v12_23 > v23_31 ? v12_23 : v23_31 ;
   float const mdV0Max = max12 > v31_12 ? max12 : v31_12;
@@ -553,27 +422,25 @@ void fill(int const kf, TLorentzVector* b, double weight, TLorentzVector const& 
   float const dca12_helix = dca1To2_helix(kRMom.Vect(), kRPos, -1*charge, p1RMom.Vect(), p1RPos, charge, vertex, v12_helix);
   float const dca23_helix = dca1To2_helix(p1RMom.Vect(), p1RPos, charge, p2RMom.Vect(), p2RPos, charge, vertex, v23_helix);
   float const dca31_helix = dca1To2_helix(p2RMom.Vect(), p2RPos, charge, kRMom.Vect(), kRPos, -1*charge, vertex, v31_helix);
+
   float dcaDaughters_helix = dca12_helix > dca31_helix ? dca12_helix : dca31_helix;
   dcaDaughters_helix = dcaDaughters_helix > dca23_helix ? dcaDaughters_helix : dca23_helix;
   v0_helix = (v12_helix + v23_helix + v31_helix) * 0.333333333;
+
   float const decayLength_helix = (v0_helix - vertex).Mag();
   float const dcaDpmToPv_helix = dcaHelix(rMom.Vect(), v0_helix, vertex, charge);
   float const cosTheta_helix = (v0_helix - vertex).Unit().Dot(rMom.Vect().Unit());
 
   // Distance between v12 and v23
-  //float const v12 = (p1AtDcaToP2 + p2AtDcaToP1 - p2AtDcaToP3 - p3AtDcaToP2).mag()/2.0;
   float const v12_23_helix = (v12_helix - v23_helix).Mag();
   // Distance between v23 and v31
-  //float const v23 = (p2AtDcaToP3 + p3AtDcaToP2 - p3AtDcaToP1 - p1AtDcaToP3).mag()/2.0;
   float const v23_31_helix = (v23_helix - v31_helix).Mag();
   // Distance between v31 and v12
-  //float const v31 = (p3AtDcaToP1 + p1AtDcaToP3 - p1AtDcaToP2 - p2AtDcaToP1).mag()/2.0;
   float const v31_12_helix = (v31_helix - v12_helix).Mag();
+
   //maximum dist between reo v0's to be averaging
   float const max12_helix =  v12_23_helix > v23_31_helix ? v12_23_helix : v23_31_helix ;
   float const mdV0Max_helix = max12_helix > v31_12_helix ? max12_helix : v31_12_helix;
-
-
 
 
   TLorentzVector kRMomRest = kRMom;
@@ -582,21 +449,6 @@ void fill(int const kf, TLorentzVector* b, double weight, TLorentzVector const& 
   kRMomRest.Boost(-beta);
   float const cosThetaStar = rMom.Vect().Unit().Dot(kRMomRest.Vect().Unit());
 
-
-
-  /*
-
-     cout << "kaon " << endl;
-  //cout << hk_tof_eff->GetEntries() << endl;
-  //int const bin = hk_tof_eff->FindBin(kRMom.Perp());
-  int const bin = hk_tof_eff->FindBin(5.);
-  cout << "bin " << bin << endl;
-  if (gRandom->Rndm() < hk_tof_eff->GetBinContent(bin)) {
-  cout << "true " << endl;
-  } else {
-  cout << "false" << endl;
-  }
-  */
 
   // save
   float arr[110];
@@ -636,8 +488,6 @@ void fill(int const kf, TLorentzVector* b, double weight, TLorentzVector const& 
   arr[iArr++] = dcaDpmToPv_helix;
   arr[iArr++] = cosTheta;
   arr[iArr++] = cosTheta_helix;
-  //arr[iArr++] = angle12;
-  //arr[iArr++] = cosThetaStar;
 
   arr[iArr++] = kMom.M();
   arr[iArr++] = kMom.Perp();
@@ -656,13 +506,10 @@ void fill(int const kf, TLorentzVector* b, double weight, TLorentzVector const& 
   arr[iArr++] = kRPos.Z();
   arr[iArr++] = kRDca;
   arr[iArr++] = kRDca_helix;
-  //arr[iArr++] = kRSDca;
   arr[iArr++] = kRDcaXY;
   arr[iArr++] = kRDcaZ;
   arr[iArr++] = kRDcaXYtoSV;
   arr[iArr++] = kRDcaZtoSV;
-  //arr[iArr++] = getEtaIndexDca(kRMom.PseudoRapidity());
-  //arr[iArr++] = getPtIndexDca(kRMom.Perp());
   arr[iArr++] = tpcReconstructed(1, -1 * charge, centrality, kRMom);
 
   arr[iArr++] = p1Mom.M();
@@ -682,13 +529,10 @@ void fill(int const kf, TLorentzVector* b, double weight, TLorentzVector const& 
   arr[iArr++] = p1RPos.Z();
   arr[iArr++] = p1RDca;
   arr[iArr++] = p1RDca_helix;
-  //arr[iArr++] = p1RSDca;
   arr[iArr++] = p1RDcaXY;
   arr[iArr++] = p1RDcaZ;
   arr[iArr++] = p1RDcaXYtoSV;
   arr[iArr++] = p1RDcaZtoSV;
-  //arr[iArr++] = getEtaIndexDca(p1RMom.PseudoRapidity());
-  //arr[iArr++] = getPtIndexDca(p1RMom.Perp());
   arr[iArr++] = tpcReconstructed(0, charge, centrality, p1RMom);
 
   arr[iArr++] = p2Mom.M();
@@ -708,30 +552,18 @@ void fill(int const kf, TLorentzVector* b, double weight, TLorentzVector const& 
   arr[iArr++] = p2RPos.Z();
   arr[iArr++] = p2RDca;
   arr[iArr++] = p2RDca_helix;
-  //arr[iArr++] = p2RSDca;
   arr[iArr++] = p2RDcaXY;
   arr[iArr++] = p2RDcaZ;
   arr[iArr++] = p2RDcaXYtoSV;
   arr[iArr++] = p2RDcaZtoSV;
-  //arr[iArr++] = getEtaIndexDca(p2RMom.PseudoRapidity());
-  //arr[iArr++] = getPtIndexDca(p2RMom.Perp());
   arr[iArr++] = tpcReconstructed(0, charge, centrality, p2RMom);
 
   arr[iArr++] = matchHft(1, vertex.z(), centrality, kRMom);
   arr[iArr++] = matchHft(0, vertex.z(), centrality, p1RMom);
   arr[iArr++] = matchHft(0, vertex.z(), centrality, p2RMom);
-  //arr[iArr++] = matchTOF(1, kRMom);
-  //arr[iArr++] = matchTOF(0, p1RMom);
-  //arr[iArr++] = matchTOF(0, p2RMom);
-  //arr[iArr++] = pow((kRMom + p1RMom).M(),2);
-  //arr[iArr++] = pow((kRMom + p2RMom).M(),2);
-  //arr[iArr++] = dca12; //DCA kp1
-  //arr[iArr++] = dca23; //DCA p1p2 
-  //arr[iArr++] = dca31; //DCA p2k
+
   arr[iArr++] = mdV0Max;
   arr[iArr++] = mdV0Max_helix;
-  //arr[iArr++] = ;
-  //cout << "iArr: " << iArr << endl;
 
   nt->Fill(arr);
 }
@@ -742,19 +574,13 @@ void getKinematics(TLorentzVector& b, double const mass, const int pTspectrum)
   float pt = 0;
   if(pTspectrum == 0) pt = gRandom->Uniform(momentumRange.first, momentumRange.second); //flat pT distribution
   if(pTspectrum == 1) pt = fWeightFunction->GetRandom(momentumRange.first, momentumRange.second); //realistic pT distribution
-  //float const pt = InvEffWeight->GetRandom(momentumRange.first, momentumRange.second);
+
   float const y = gRandom->Uniform(-acceptanceRapidity, acceptanceRapidity);
   float const phi = TMath::TwoPi() * gRandom->Rndm();
-  //float const phi = gRandom->(-1*TMath::Pi(), TMath::Pi());
 
   float const mT = sqrt(mass * mass + pt * pt);
   float const pz = mT * sinh(y);
   float const E = mT * cosh(y);
-
-  //same calculation as in data - test, Vanek 19/09/12
-  //float const pz = pt * sinh(y);
-  //float const p = pt * cosh(y);
-  //float const E = sqrt(p*p + mass*mass);
 
   b.SetPxPyPzE(pt * cos(phi), pt * sin(phi) , pz, E);
 }
@@ -762,8 +588,6 @@ void getKinematics(TLorentzVector& b, double const mass, const int pTspectrum)
 //___________
 void bookObjects(int centLow, int centUp)
 {
-  //int const centDef[nCentHftRatio+1] = {80, 70, 60, 50, 40, 30, 20, 10, 5, 0}; //centrality definition in % - now defined as global
-
 
   int centrality9_low = -1; //defaul value
   int centrality9_up = -1; //defaul value
@@ -798,30 +622,7 @@ void bookObjects(int centLow, int centUp)
   fKaonMinusMomResolution = (TF1*)f.Get("KMinusMomResFit")->Clone("KMinusMomResFit");
   f.Close();
 
-  cout << "Loading TOF eff ..." << endl;
-  TFile f_tof("./input/tof_eff_Dmp_run16_HFT_1sig_20_hist.root"); //tof_eff_Dmp_run16_HFT_1sig_20_hist.root contains histograms only!!!
-  //fPionTofEff = (TF1*)f_tof.Get("fPion")->Clone("fPion"); //commented for tof_eff_Dmp_run16_HFT_1sig_20_hist.root input
-  //fKaonTofEff = (TF1*)f_tof.Get("fKaon")->Clone("fKaon");
-  h_pi_tof_eff = (TH1D*)f_tof.Get("h_pi_tof_eff");
-  h_pi_tof_eff->SetDirectory(0);
-  h_k_tof_eff = (TH1D*)f_tof.Get("h_k_tof_eff");
-  h_k_tof_eff->SetDirectory(0);
-  /*
-     float pp = 5.;
-     cout << "at 5 " << fKaonTofEff->Eval(pp) << endl;
-     */
-  f_tof.Close();
-  /*
-     cout << "at 5 " << fKaonTofEff->Eval(5.) << endl;
-     if (gRandom->Rndm() < fKaonTofEff->Eval(5.)) {
-     cout << "true " << endl;
-     } else {
-     cout << "false" << endl;
-     }
-     */
 
-
-  //all files moved into "input" folder
   cout << "Loading input spectra ..." << endl;
   TFile fPP("./input/pp200_spectra.root");
   fWeightFunction = (TF1*)fPP.Get("run12/f1Levy")->Clone("f1Levy");
@@ -829,11 +630,9 @@ void bookObjects(int centLow, int centUp)
 
   TFile fVertex("./input/Vz_Cent_Run16.root");
 
-  //for (int ii = 0; ii < nCentHftRatio; ++ii)
   for(int ii = centrality9_low; ii < centrality9_up; ii++)
   {
     h1Vz[ii] = (TH1D*)(fVertex.Get(Form("mh1VzWg_%i", ii)));
-    //h1Vz[ii] = (TH1D*)(fVertex.Get(Form("mh1Vz_%i", ii)));
     h1Vz[ii]->SetDirectory(0);
   }
 
@@ -842,14 +641,12 @@ void bookObjects(int centLow, int centUp)
   cout << "Loading input HFT ratios and DCA ..." << endl;
 
 
-  TFile *fHftRatio1 = new TFile("./input/HFT_Ratio_VsPt_Centrality_Eta_Phi_Vz_Zdcx_1Sigma_DCA_cuts_binom_err.root", "read"); //old file names - rename input accordingly
+  TFile *fHftRatio1 = new TFile("./input/HFT_Ratio_VsPt_Centrality_Eta_Phi_Vz_Zdcx_1Sigma_DCA_cuts_binom_err.root", "read");
   TFile *fDca1 = new TFile("./input/2DProjection_simCent_NoBinWidth_3D_Dca_VsPt_Centrality_Eta_Phi_Vz_Zdcx_1Sigma_DCA_cuts.root", "read");
 
-  //cout<<"test"<<endl;
 
   for (int iParticle = 0; iParticle < nParticles; ++iParticle)
   {
-    //for (int iCent = 0; iCent < nCentHftRatio; ++iCent)
     for(int iCent = centrality9_low; iCent < centrality9_up; iCent++)
     {
       // HFT ratio
@@ -859,7 +656,6 @@ void bookObjects(int centLow, int centUp)
         {
           for (int iPhi = 0; iPhi < nPhisHftRatio; ++iPhi)
           {
-            //cout<<iParticle<<" "<<iEta<<" "<<iVz<<" "<<iPhi<<" "<<iCent<<endl;
             hHftRatio1[iParticle][iEta][iVz][iPhi][iCent] = (TH1D*)fHftRatio1->Get(Form("mh1HFT1PtCentPartEtaVzPhi_%i_%i_%i_%i_%i", iParticle, iEta, iVz, iPhi, iCent)); //Run16 names
             //hHftRatio1[iParticle][iEta][iVz][iPhi][iCent] = (TH1D*)fHftRatio1->Get(Form("mh1HFT1PtCentPartEtaVzPhiRatio_%i_%i_%i_%i_%i", iParticle, iEta, iVz, iPhi, iCent)); //Run14 names
             hHftRatio1[iParticle][iEta][iVz][iPhi][iCent]->SetDirectory(0);
@@ -869,7 +665,7 @@ void bookObjects(int centLow, int centUp)
     }
     cout << "Finished loading HFT Ratio: " <<  endl;
 
-    //for (int iCent = 0; iCent < nCentDca; ++iCent)
+
     for(int iCent = centrality9_low; iCent < centrality9_up; iCent++)
     {
       // DCA
@@ -877,7 +673,6 @@ void bookObjects(int centLow, int centUp)
       {
         for (int iVz = 0; iVz < nVzsDca; ++iVz)
         {
-          // for (int iPhi = 0; iPhi < nPhisDca; ++iPhi)
           for (int iPt = 0; iPt < nPtBinsDca; ++iPt)
           {
             h2Dca[iParticle][iEta][iVz][iCent][iPt] = (TH2D*)((fDca1->Get(Form("mh2DcaPtCentPartEtaVzPhi_%i_%i_%i_%i_%i", iParticle, iEta, iVz, iCent, iPt))));
@@ -885,34 +680,33 @@ void bookObjects(int centLow, int centUp)
           }
         }
       }
-    }
-    // cout << "Finished loading centrality: " << iCent << endl;
+    }    
   }
   cout << "Finished loading Dca: " <<  endl;
 
 
-    std::cout << "Loading HFT ratios Correction factor for inclusive and primary..." << std::endl;
-    TFile *fHftRatioCorrect = new TFile("./input/HFT_Ratio_Correction_Hijing_QM.root", "read");
-    for (int iParticle = 0; iParticle < nParticles; ++iParticle)
+  std::cout << "Loading HFT ratios Correction factor for inclusive and primary..." << std::endl;
+  TFile *fHftRatioCorrect = new TFile("./input/HFT_Ratio_Correction_Hijing_QM.root", "read");
+  for (int iParticle = 0; iParticle < nParticles; ++iParticle)
+  {
+    for(int iCent = 0; iCent < 1; iCent++)
     {
-      for(int iCent = 0; iCent < 1; iCent++)
-      {
 
-        for (int iEta = 0; iEta < nEtasHftRatio; ++iEta)
+      for (int iEta = 0; iEta < nEtasHftRatio; ++iEta)
+      {
+        for (int iVz = 0; iVz < nVzsHftRatio; ++iVz)
         {
-          for (int iVz = 0; iVz < nVzsHftRatio; ++iVz)
+          for (int iPhi = 0; iPhi < nPhisHftRatio; ++iPhi)
           {
-            for (int iPhi = 0; iPhi < nPhisHftRatio; ++iPhi)
-            {
-              hHftRatioCorrect[iParticle][iEta][iVz][iPhi][iCent]  = (TH1D*)fHftRatioCorrect->Get(Form("mhHFTRatio_%i_%i_%i_%i_%i", iParticle, iEta, iVz, iPhi, iCent));
-              hHftRatioCorrect[iParticle][iEta][iVz][iPhi][iCent]->SetDirectory(0);
-            }
+            hHftRatioCorrect[iParticle][iEta][iVz][iPhi][iCent]  = (TH1D*)fHftRatioCorrect->Get(Form("mhHFTRatio_%i_%i_%i_%i_%i", iParticle, iEta, iVz, iPhi, iCent));
+            hHftRatioCorrect[iParticle][iEta][iVz][iPhi][iCent]->SetDirectory(0);
           }
         }
       }
     }
+  }
     
-    fHftRatioCorrect->Close();
+  fHftRatioCorrect->Close();
 
   fHftRatio1->Close();
   fDca1->Close();
@@ -924,7 +718,7 @@ void bookObjects(int centLow, int centUp)
   TFile fTpcKPlus("./input/Eff_KaonPlus_embedding.root");
   TFile fTpcKMinus("./input/Eff_KaonMinus_embedding.root");
 
-  //for (int iCent = 0; iCent < nCentHftRatio; ++iCent)
+
   for(int iCent = centrality9_low; iCent < centrality9_up; iCent++)
   {
     hTpcPiPlus[iCent] = (TH1D*)fTpcPiPlus.Get(Form("TrackEffCent%i", iCent));
@@ -941,37 +735,13 @@ void bookObjects(int centLow, int centUp)
   fTpcPiMinus.Close();
   fTpcKPlus.Close();
   fTpcKMinus.Close();
-  /*
-     cout<<" Loading weight function for pT generation "<<endl;
-     TFile *InvEffWeightFile = new TFile("./input/Inverse_eff_weight.root", "read");
-
-     InvEffWeight = (TF1*)InvEffWeightFile->Get("InvEffFunc");
-
-     InvEffWeightFile->Close();
-     */
-  cout << "Done with loading all files ..." << endl;
 
   result = new TFile(outFileName.c_str(), "recreate");
   result->SetCompressionLevel(1);
   result->cd();
 
   int BufSize = (int)pow(2., 16.);
-  /*//old full version of nTuple	
-  // int Split = 1;
-  nt = new TNtuple("nt", "", "cent:vx:vy:vz:vzIdx:"
-  "pid:w:m:pt:eta:y:phi:v0x:v0y:v0z:" // MC Dpm
-  "rM:rPt:rEta:rY:rPhi:rV0x:rV0y:rV0z:" // Rc Dpm
-  "dcaDaughters:dcaDaughters_helix:decayLength:decayLength_helix:MCdecayLength:dcaDpmToPv:dcaDpmToPv_helix:cosTheta:cosTheta_helix:angle12:cosThetaStar:" // Rc pair
-  "kM:kPt:kEta:kY:kPhi:kDca:" // MC Kaon
-  "kRM:kRPt:kREta:kRY:kRPhi:kRVx:kRVy:kRVz:kRDca:kRDca_helix:kRSDca:kRDcaXY:kRDcaZ:kEtaIdx:kPtIdx:kTpc:" // Rc Kaon
-  "p1M:p1Pt:p1Eta:p1Y:p1Phi:p1Dca:" // MC Pion1
-  "p1RM:p1RPt:p1REta:p1RY:p1RPhi:p1RVx:p1RVy:p1RVz:p1RDca:p1RDca_helix:p1RSDca:p1RDcaXY:p1RDcaZ:p1EtaIdx:p1PtIdx:p1Tpc:" // Rc Pion1
-  "p2M:p2Pt:p2Eta:p2Y:p2Phi:p2Dca:" // MC Pion2
-  "p2RM:p2RPt:p2REta:p2RY:p2RPhi:p2RVx:p2RVy:p2RVz:p2RDca:p2RDca_helix:p2RSDca:p2RDcaXY:p2RDcaZ:p2EtaIdx:p2PtIdx:p2Tpc:" // Rc Pion2
-  "kHft:p1Hft:p2Hft:kTof:p1Tof:p2Tof:sA:sB:dcakp1:dcap1p2:dcap2k:mdV0Max:mdV0Max_helix", BufSize);
-  // nt->SetAutoSave(-500000); // autosave every 1 Mbytes
-  */
-  //new, reduced nTuple
+
   nt = new TNtuple("nt", "", "cent:vx:vy:vz:vzIdx:"
       "pid:w:m:pt:eta:y:phi:v0x:v0y:v0z:" // MC Dpm
       "rM:rPt:rEta:rY:rPhi:rV0x:rV0y:rV0z:" // Rc Dpm
@@ -983,7 +753,6 @@ void bookObjects(int centLow, int centUp)
       "p2M:p2Pt:p2Eta:p2Y:p2Phi:p2Dca:" // MC Pion2
       "p2RM:p2RPt:p2REta:p2RY:p2RPhi:p2RVx:p2RVy:p2RVz:p2RDca:p2RDca_helix:p2RDcaXY:p2RDcaZ:p2RDcaXYtoSV:p2RDcaZtoSV:p2Tpc:" // Rc Pion2
       "kHft:p1Hft:p2Hft:mdV0Max:mdV0Max_helix");
-  // nt->SetAutoSave(-500000); // autosave every 1 Mbytes
 
   cout << "Done with loading all files ..." << endl;
 }
@@ -1014,9 +783,6 @@ float dcaHelix(TVector3 const& p, TVector3 const& pos, TVector3 const& vertex, f
 
 
   return (origin - vertex_work).mag()*1e4;
-
-
-  //return helix_work.distance(vertex_work);
 
 }
 
@@ -1213,22 +979,17 @@ TVector3 smearPosData(int const iParticleIndex, double const vz, int cent, TLore
 {
   int const iEtaIndex = getEtaIndexDca(rMom.PseudoRapidity());
   int const iVzIndex = getVzIndexDca(vz);
-  // int const iPhiIndex = getPhiIndexDca(rMom.Phi());
   int const iPtIndex = getPtIndexDca(rMom.Perp());
 
   double sigmaPosZ = 0;
   double sigmaPosXY = 0;
-
-  // if (cent == 8) cent = 7;
-  // All the centrality position smear was based on 0-10% centrality input
-  // changed to 0-80%
 
   h2Dca[iParticleIndex][iEtaIndex][iVzIndex][cent][iPtIndex]->GetRandom2(sigmaPosXY, sigmaPosZ);
   if(sigmaPosXY==0 || sigmaPosZ==0 || sigmaPosXY != sigmaPosXY || sigmaPosZ != sigmaPosZ)
   {
     cout<<iParticleIndex<<" "<<iEtaIndex<<" "<<iVzIndex<<" "<<cent<<" "<<iPtIndex<<endl;
   }
-  // h2Dca[iParticleIndex][iEtaIndex][iVzIndex][iPhiIndex][iPtIndex]->GetRandom2(sigmaPosXY, sigmaPosZ);
+
   sigmaPosZ *= 1.e4; //convert to micrometers
   sigmaPosXY *= 1.e4;
 
@@ -1237,14 +998,6 @@ TVector3 smearPosData(int const iParticleIndex, double const vz, int cent, TLore
   TVector3 momPerp(-rMom.Vect().Y(), rMom.Vect().X(), 0.0); //vector perpendicular to momentum in xy plane
 
   newPos -= momPerp.Unit() * sigmaPosXY;
-  //
-
-  //float xRndm = gRandom->Uniform(-1, 1);
-  //float sign = gRandom->Integer(2); //generates randomly 0 or 1
-
-  //TVector3 posShift( xRndm, pow(-1., sign)*sqrt(1-xRndm*xRndm), 0 );
-  //newPos -= posShift * sigmaPosXY;
-
 
   return TVector3(newPos.X(), newPos.Y(), pos.Z() + sigmaPosZ);
 }
@@ -1293,110 +1046,48 @@ bool matchHft(int const iParticleIndex, double const vz, int const cent, TLorent
 
     int const bin_corr = hHftRatioCorrect[iParticleIndex][iEtaIndex][iVzIndex][iPhiIndex][0]->FindBin(mom.Perp());
 
-
+  //additional correction same as for Run14
   double AdditionalCorrectFactor = hHftRatioCorrect[iParticleIndex][iEtaIndex][iVzIndex][iPhiIndex][0]->GetBinContent(bin_corr);
   if(fabs(AdditionalCorrectFactor - 0.) < 1.e-5) AdditionalCorrectFactor = 1.0;
   if(mom.Perp() > 3.0) AdditionalCorrectFactor = 1.0;
   if(cent == 0 && mom.Perp() > 4.0) 
-  {
-    
-
-
+  {    
     return gRandom->Rndm() < hHftRatio1[iParticleIndex][iEtaIndex][iVzIndex][iPhiIndex][cent+1]->GetBinContent(bin)/AdditionalCorrectFactor;
   }
   else
-  {
-    
-
+  { 
     return gRandom->Rndm() < hHftRatio1[iParticleIndex][iEtaIndex][iVzIndex][iPhiIndex][cent]->GetBinContent(bin)/AdditionalCorrectFactor;
   }
 
-  //return gRandom->Rndm() < hHftRatio1[iParticleIndex][iEtaIndex][iVzIndex][iPhiIndex][cent]->GetBinContent(bin);
+}
+//______________________________________________________________________________________________________________________
+
+void write()
+{
+  result->cd();
+  nt->Write();
+  result->Close();
 }
 
-bool matchTOF(int const iParticleIndex, TLorentzVector const& mom)
+void initEvtGen()
 {
+  cout<<"initEvtGen start..."<<endl;
+  EvtRandomEngine* eng = 0;
+  eng = new EvtSimpleRandomEngine();
+  cout<<"setting random engine..."<<endl;
+  EvtRandom::setRandomEngine((EvtRandomEngine*)eng);
+  cout<<"done"<<endl;
+  EvtAbsRadCorr* radCorrEngine = 0;
+  std::list<EvtDecayBase*> extraModels;
 
-  //cout << "tof eff ... " << endl;
-  if (iParticleIndex == 0) { // pion
-    //return gRandom->Rndm() < fPionTofEff->Eval(mom.Perp()); //from function
+  EvtExternalGenList genList;
+  radCorrEngine = genList.getPhotosModel();
+  extraModels = genList.getListOfModels();
 
-    return gRandom->Rndm() < h_pi_tof_eff->GetBinContent(h_pi_tof_eff->FindBin(mom.Perp())); //from histogram
-
-    /*
-       if (gRandom->Rndm() < fKaonTofEff->Eval(5.)) {
-       cout << "pion " << endl;
-       if (mom.Perp() > 10.) {
-       int const bin = h_pi_tof_eff->FindBin(9.9);
-       cout << "bin " << bin << endl;
-       return gRandom->Rndm() < h_pi_tof_eff->GetBinContent(bin);
-       } else {
-       int const bin = h_pi_tof_eff->FindBin(mom.Perp());
-       cout << "bin " << bin << endl;
-       return gRandom->Rndm() < h_pi_tof_eff->GetBinContent(bin);
-       }
-       */
-  } 
-       else if (iParticleIndex == 1) { // kaon
-         //return gRandom->Rndm() < fKaonTofEff->Eval(mom.Perp()); //from function
-
-         return gRandom->Rndm() < h_k_tof_eff->GetBinContent(h_k_tof_eff->FindBin(mom.Perp())); //from histogram
-         /*
-            cout << "kaon " << endl;
-            if (mom.Perp() > 10.) {
-         //Double_t p = 9.9;
-         //int const bin = hk_tof_eff->FindBin(p);
-         cout << "<" << endl;
-         int const bin = hk_tof_eff->GetNbinsX() - 1;
-         cout << "bin " << bin << endl;
-         return gRandom->Rndm() < hk_tof_eff->GetBinContent(bin);
-         } else {
-         cout << ">" << endl;
-         cout << hk_tof_eff->GetEntries() << endl;
-         int const bin = hk_tof_eff->FindBin(mom.Perp());
-         cout << "bin " << bin << endl;
-         return gRandom->Rndm() < hk_tof_eff->GetBinContent(bin);
-         }
-         */
-       } else {
-         return false;
-       }
-  }
-
-  //______________________________________________________________________________________________________________________
-  void write()
-  {
-    //result->cd(); //same as in pythia_FastSim
-    //
-    //result = new TFile(outFileName.c_str(), "recreate");
-    //result->SetCompressionLevel(1);
-    //result->cd();
-
-    result->cd();
-    nt->Write();
-    result->Close();
-
-  }
-
-  void initEvtGen()
-  {
-    cout<<"initEvtGen start..."<<endl;
-    EvtRandomEngine* eng = 0;
-    eng = new EvtSimpleRandomEngine();
-    cout<<"setting random engine..."<<endl;
-    EvtRandom::setRandomEngine((EvtRandomEngine*)eng);
-    cout<<"done"<<endl;
-    EvtAbsRadCorr* radCorrEngine = 0;
-    std::list<EvtDecayBase*> extraModels;
-
-    EvtExternalGenList genList;
-    radCorrEngine = genList.getPhotosModel();
-    extraModels = genList.getListOfModels();
-
-    TString Decay_DEC="StRoot/StarGenerator/EvtGen1_06_00/DECAY.DEC";
-    TString Evt_pdl="StRoot/StarGenerator/EvtGen1_06_00/evt.pdl";
-    EvtGen *myGenerator=new EvtGen(Decay_DEC,Evt_pdl,(EvtRandomEngine*)eng,radCorrEngine, &extraModels);
-    starEvtGenDecayer=new StarEvtGenDecayer(myGenerator);
-    starEvtGenDecayer->SetDecayTable("Dpm.D_DALITZ.DEC");
-    starEvtGenDecayer->SetDebug(0);
-  }
+  TString Decay_DEC="StRoot/StarGenerator/EvtGen1_06_00/DECAY.DEC";
+  TString Evt_pdl="StRoot/StarGenerator/EvtGen1_06_00/evt.pdl";
+  EvtGen *myGenerator=new EvtGen(Decay_DEC,Evt_pdl,(EvtRandomEngine*)eng,radCorrEngine, &extraModels);
+  starEvtGenDecayer=new StarEvtGenDecayer(myGenerator);
+  starEvtGenDecayer->SetDecayTable("Dpm.D_DALITZ.DEC");
+  starEvtGenDecayer->SetDebug(0);
+}

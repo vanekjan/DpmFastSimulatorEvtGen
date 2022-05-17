@@ -40,6 +40,7 @@ void nt_TMVA_Cuts::Loop()
   // METHOD2: replace line
   //    fChain->GetEntry(jentry);       //read all branches
   //by  b_branchname->GetEntry(ientry); //read only this branch
+
   if (fChain == 0) return;
 
   // generated Dpm histograms
@@ -134,15 +135,7 @@ void nt_TMVA_Cuts::Loop()
 
   //----------------------------------------------------------------------------------------------------
 
-
-
-
-
-
-
   //invariant mass hitograms
-
-
   TH1F *h_D_inv_mass_base = new TH1F("D_inv_mass", "D_inv_mass", 40, 1.7, 2.1); //base histogram for D+- inv. mass
 
   TH1F *h_D_inv_mass_array[nPtBins][nCentBins]; //inv. mass histograms - same as in analysis
@@ -158,41 +151,27 @@ void nt_TMVA_Cuts::Loop()
   }  
   //-------------------------------------------------------------------------------------------------------
   //load input files with cuts-----------------------------------------------------------------------------
-  if(ReadMode != 0)
+  if(ReadMode != 0) //ReadMode == 0 is for analysis pre-cuts stored in tmvaCuts.h
   {
     ifstream CutsFile[nCentBins-1];
 
     for(unsigned int j = 0; j < nCentBins-1; j++)
     {
       ostringstream filename;
-      //add setter as an argument of Loop to set cuts (ana, loose, tight, pre-cuts)
+
+      // load cuts (0 - pre-cuts, 1 - ana, 2 - loose, 3 - tight)
       if(ReadMode == 1)
       {
-        //filename << "./TMVA_cuts/002_new_11pT_bins_2_pT_regions/analysis/cuts_cent_" << j << ".txt";
         filename << "./TMVA_cuts/005_new_training_2020/analysis/cuts_cent_" << j << ".txt";
-        //filename << "./TMVA_cuts/006_new_training_2020_Delta_max/analysis/cuts_cent_" << j << ".txt";
-
       }
       if(ReadMode == 2)
       {
-        //filename << "./TMVA_cuts/005_new_training_2020/loose/30_percent/cuts_loose_cent_" << j << ".txt";
         filename << "./TMVA_cuts/005_new_training_2020/loose/50_percent/cuts_loose_cent_" << j << ".txt";
-        //filename << "./TMVA_cuts/006_new_training_2020_Delta_max/loose/30_percent/cuts_loose_cent_" << j << ".txt";
-
       }
       if(ReadMode == 3)
       {
-        //filename << "./TMVA_cuts/005_new_training_2020/tight/30_percent/cuts_tight_cent_" << j << ".txt";
         filename << "./TMVA_cuts/005_new_training_2020/tight/50_percent/cuts_tight_cent_" << j << ".txt";
-        //filename << "./TMVA_cuts/006_new_training_2020_Delta_max/tight/30_percent/cuts_tight_cent_" << j << ".txt";
-
       }
-      if(ReadMode == 4)
-      {
-        filename << "./TMVA_cuts/004_recrtangular_cuts_test/analysis/cuts_cent_" << j << ".txt";
-
-      }
-
 
 
       CutsFile[j].open(filename.str().c_str());
@@ -236,11 +215,6 @@ void nt_TMVA_Cuts::Loop()
           {
             CutsLineStream>>D_cos_theta_cut[cent][pTbin];
           }
-          if(lineNo==6)
-          {
-            CutsLineStream>>D_dV0Max_cut[cent][pTbin];
-            //break; //leave Delta max at pre-cuts - to test Delta max cut
-          }
 
         }//end for (pT)
 
@@ -266,28 +240,8 @@ void nt_TMVA_Cuts::Loop()
     if(jentry%(nentries/10)==0) std::cout<<((jentry+10)*100/nentries)<<" % done..."<<std::endl;		
     nb = fChain->GetEntry(jentry);
     nbytes += nb;
-    // if (Cut(ientry) < 0) continue;
 
-    // generated Dpm
-    /*		
-                if(cent > -0.5 and cent < 0.5) h_dpm_pt[0]->Fill(pt,w);
-                if(cent > 0.5 and cent < 1.5) h_dpm_pt[1]->Fill(pt,w);
-                if(cent > 1.5 and cent < 2.5) h_dpm_pt[2]->Fill(pt,w);
-                if(cent > 2.5 and cent < 3.5) h_dpm_pt[3]->Fill(pt,w);
-                if(cent > 3.5 and cent < 4.5) h_dpm_pt[4]->Fill(pt,w);
-                if(cent > 4.5 and cent < 5.5) h_dpm_pt[5]->Fill(pt,w);
-                if(cent > 5.5 and cent < 6.5) h_dpm_pt[6]->Fill(pt,w);
-                if(cent > 6.5 and cent < 7.5) h_dpm_pt[7]->Fill(pt,w);
-                if(cent > 7.5 and cent < 8.5) h_dpm_pt[8]->Fill(pt,w);
-                */
-    //if(cosTheta < 0) continue; //for testing of cosTheta
-
-    //if( fabs(kRDcaXYtoSV) > 300 || fabs(p1RDcaXYtoSV) > 300 || fabs(p2RDcaXYtoSV) > 300 ) continue;
-    //if( fabs(kRDcaZtoSV) > 300 || fabs(p1RDcaZtoSV) > 300 || fabs(p2RDcaZtoSV) > 300 ) continue;
-    //
-
-    if(pTspectrum == 1) w = 1; //pTspectrum == 1 -> Levy input pt spectrum - already realistic, no need to use weights
-
+    if(pTspectrum == 1) w = 1; //pTspectrum == 1 -> Levy input pt spectrum - already realistic, no need to use weights, set in run_nt_TMVA_Cuts.C
 
     if(cent > -0.5 and cent < 0.5) h_dpm_pt[0]->Fill(rPt,w);
     if(cent > 0.5 and cent < 1.5) h_dpm_pt[1]->Fill(rPt,w);
@@ -307,14 +261,8 @@ void nt_TMVA_Cuts::Loop()
     h_dpm_phi->Fill(phi);
     h_dpm_eta_phi->Fill(eta, phi);
 
-    //if (TMath::Abs(rV0z) > con_rV0z) continue;
-    // |TPC Vz|
-    //if (TMath::Abs(v0z) > con_v0z) continue;
     n_cuts->Fill(1);
-    // |TPC Vz - VPD Vz| missing
-    //
-    // cent
-    //if (cent != con_cent) continue;
+
     if (cent > con_cent_up) continue;
     if (cent < con_cent_down) continue;
     n_cuts->Fill(2);
@@ -346,7 +294,7 @@ void nt_TMVA_Cuts::Loop()
     int DpmTPC = 1;
 
     if (kTpc != 1 || p1Tpc != 1 || p2Tpc != 1) DpmTPC = 0;//continue;
-    //if (kTof != 1 || p1Tof != 1 || p2Tof != 1) continue;
+
     n_cuts->Fill(4);
 
 
@@ -355,12 +303,6 @@ void nt_TMVA_Cuts::Loop()
 
     for(int j = 0; j < nPtBins; j++) //loop over pT bins
     {
-      /*
-         if(pt > pT_bins[j] && pt <= pT_bins[j+1])
-         {
-         ptBin = j;
-         }
-         */
       if(rPt > pT_bins[j] && rPt <= pT_bins[j+1])
       {
         ptBin = j;
@@ -376,27 +318,11 @@ void nt_TMVA_Cuts::Loop()
     if( centBin_9 == 7 || centBin_9 == 8 ) centBin = 0; //0-10%
     if( centBin_9 == 4 || centBin_9 == 5 || centBin_9 == 6  ) centBin = 1; //10-40%
     if( centBin_9 == 0 || centBin_9 == 1 || centBin_9 ==  2 || centBin_9 ==  3 ) centBin = 2; //40-80%
-    //if( cent != -1 ) centBin = 3; //0-80%
 
 
     if(ptBin < 0 || centBin < 0 ) continue; //reject Dpm with pT and centrality out of range
 
-/*
-    //need different pre-cuts for 40-80 for TMVA nSignal estimation
-    //for test of cuts on DCA, decayLength and delta_max
-    double decL_upCut = 1e4;
 
-    if( centBin == 2 )
-    {
-      if(  p1RDca > 2000 || p2RDca > 2000 || kRDca > 2000  ) continue; //cut from old production
-      decL_upCut = 0.2*1e4;
-    }
-    else
-    {
-      if(  p1RDca > 1.5e4 || p2RDca > 1.5e4 || kRDca > 1.5e4  ) continue; //cut for new production/pre-cuts
-      decL_upCut = 0.5*1e4;
-    }
-*/
     if(DpmHFT == 1)
     {
       h_r_dpm_pt_HFT_match_no_topo_cuts[centBin_9]->Fill(rPt, w);
@@ -408,17 +334,14 @@ void nt_TMVA_Cuts::Loop()
     }
 
     //for current version of results
-    if(  p1RDca > 2000 || p2RDca > 2000 || kRDca > 2000  ) continue; //cut from old production
+    if(  p1RDca > 2000 || p2RDca > 2000 || kRDca > 2000  ) continue;
 
     if((dcaDaughters < mdcaMax_cut[centBin][ptBin]*10000) &&
-        (decayLength > D_decayL_min_cut[centBin][ptBin]*10000 /*&& decayLength < decL_upCut */) &&
+        (decayLength > D_decayL_min_cut[centBin][ptBin]*10000 ) &&
         (cosTheta > D_cos_theta_cut[centBin][ptBin] ) &&
-        //(mdV0Max <  D_dV0Max_cut[centBin][ptBin]*10000) &&
         (mdV0Max <  250) && //manually tuned cut on Delta_max
         ( p1RDca > pi1_dca_cut[centBin][ptBin]*10000 && p2RDca > pi2_dca_cut[centBin][ptBin]*10000 && kRDca > k_dca_cut[centBin][ptBin]*10000 ) )
     {
-      // reconstructed Dpm without TOF matching
-      //      h_r_dpm_pt[centBin_9]->Fill(pt,w); //added weigh
 
       h_r_dpm_pt_no_match[centBin_9]->Fill(rPt, w);
 

@@ -14,13 +14,3 @@ mkdir ./jobs/csh/${prodId}
 mkdir ./jobs/list/${prodId}
 
 star-submit-template -template submitToyMcEvtGen_sst.xml -entities productionId=${prodId}
-
-#mv *.session.xml ./jobs/submit/${prodId}
-
-#mv ./jobs/csh/*.csh ./jobs/csh/${prodId}
-#mv ./jobs/csh/*.condor ./jobs/report/${prodId}
-
-#mv ./jobs/report/*.log ./jobs/report/${prodId}
-#mv ./jobs/report/*.report ./jobs/report/${prodId}
-
-#mv ./jobs/list/*.list ./jobs/list/${prodId}
