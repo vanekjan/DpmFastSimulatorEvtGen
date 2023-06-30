@@ -615,7 +615,7 @@ void bookObjects(int centLow, int centUp)
   cout<<endl;
 
   cout << "Loading input momentum resolution ..." << endl;
-  TFile f("./input/Momentum_resolution_Run16_SL16j.root");
+  TFile f("./input/Momentum_resolution_Run16.root");
   fPionPlusMomResolution = (TF1*)f.Get("PiPlusMomResFit")->Clone("PiPlusMomResFit");
   fPionMinusMomResolution = (TF1*)f.Get("PiMinusMomResFit")->Clone("PiMinusMomResFit");
   fKaonPlusMomResolution = (TF1*)f.Get("KPlusMomResFit")->Clone("KPlusMomResFit");
@@ -641,8 +641,8 @@ void bookObjects(int centLow, int centUp)
   cout << "Loading input HFT ratios and DCA ..." << endl;
 
 
-  TFile *fHftRatio1 = new TFile("./input/HFT_Ratio_VsPt_Centrality_Eta_Phi_Vz_Zdcx_1Sigma_DCA_cuts_binom_err.root", "read");
-  TFile *fDca1 = new TFile("./input/2DProjection_simCent_NoBinWidth_3D_Dca_VsPt_Centrality_Eta_Phi_Vz_Zdcx_1Sigma_DCA_cuts.root", "read");
+  TFile *fHftRatio1 = new TFile("./input/HFT_Matching_Ratios_Run16.root", "read");
+  TFile *fDca1 = new TFile("./input/DCA_Resolution_Run16.root", "read");
 
 
   for (int iParticle = 0; iParticle < nParticles; ++iParticle)
