@@ -16,7 +16,7 @@ starver SL19e
 
 mv input_sst input
 
-root4star -b -l -q run_evtGent_toyMc.C\(1e5\)
+root4star -b -l -q run_evtGent_toyMc.C\(1e5,&centLow;,&centHigh;,&pTspectrum;\)
 mv Dpm.toyMc.root Dpm.$JOBID.toyMc.root
 
 

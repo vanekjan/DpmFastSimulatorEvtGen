@@ -1,4 +1,4 @@
-void run_evtGent_toyMc(int nEvents = 1e3)
+void run_evtGent_toyMc(int nEvents = 1e3, int cent_low = 0, int cent_high = 80, int pT_spectrum = 0)
 {
 
   gSystem->Load("libStTableUtilities.so");
@@ -27,7 +27,7 @@ void run_evtGent_toyMc(int nEvents = 1e3)
 
   StChain chain("myChain");
 
-  gROOT->ProcessLine(Form(".x evtGen_toyMc.C+(%i , %i, %i, %i)",nEvents, 40, 80, 1)); // possible to set a custom centrality range and shape of input pT spectrum (0 - flat, 1 - Levy)
+  gROOT->ProcessLine(Form(".x evtGen_toyMc.C+(%i , %i, %i, %i)",nEvents, cent_low, cent_high, pT_spectrum)); // possible to set a custom centrality range and shape of input pT spectrum (0 - flat, 1 - Levy)
 
   chain.Finish();
 

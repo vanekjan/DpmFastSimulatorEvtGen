@@ -203,7 +203,7 @@ void evtGen_toyMc(int npart = 1000, int centLow = 0, int centUp = 80, int pTspec
 
   for (int ipart = 0; ipart < npart; ipart++)
   {
-    if (!(ipart % 100000))
+    if (!(ipart % npart))
       cout << "____________ ipart = " << ipart / static_cast<float>(npart) << " ________________" << endl;
 
     TLorentzVector* b_d = new TLorentzVector;

@@ -16,13 +16,13 @@ starver SL19e
 
 mv input_physics input
 
-root4star -b -l -q run_evtGent_toyMc.C\(1e5\)
+root4star -b -l -q run_evtGent_toyMc.C\(&nEvents;,&centLow;,&centHigh;,&pTspectrum;\)
 mv Dpm.toyMc.root Dpm.$JOBID.toyMc.root
 
 
 </command>
 
-<output fromScratch="*.toyMc.root" toURL="/gpfs01/star/pwg/vanekjan/myDpmEvtGenFastSim/myOutput/&productionId;/"/>
+<output fromScratch="*.toyMc.root" toURL="/star/u/vanekjan/pwg/vanekjan/myDpmEvtGenFastSim/myOutput/&productionId;/"/>
 
 <SandBox installer="ZIP">
   <Package name="LocalLibraries">
