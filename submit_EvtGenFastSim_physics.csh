@@ -18,7 +18,7 @@ set pTspectrum=$3
 
 #number of events used for analysis is 1e5
 #can set any lower number for testing
-set nEvents=1e4
+set nEvents=1e5
 
 mkdir ./myOutput/${prodId}
 mkdir ./jobs/log/${prodId}
